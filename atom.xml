@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://jevy.wang</id>
     <title>Jevy Wang&apos;s Blog</title>
-    <updated>2021-03-06T07:09:02.739Z</updated>
+    <updated>2021-03-06T11:32:13.340Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://jevy.wang"/>
     <link rel="self" href="https://jevy.wang/atom.xml"/>
@@ -15,7 +15,7 @@
         <id>https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/</id>
         <link href="https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/">
         </link>
-        <updated>2021-03-06T12:40:14.000Z</updated>
+        <updated>2021-03-06T15:40:14.000Z</updated>
         <summary type="html"><![CDATA[<ul>
 <li>Install/start Docker</li>
 <li>Install python3</li>
@@ -23,48 +23,6 @@
 <li>Install serverless: npm install -g serverless</li>
 <li>Install virtualenv of python pip install virtualenv</li>
 </ul>
-<p>Create Serverless project</p>
-<pre><code>serverless create   --template aws-python3  --name project-name  --path project-path
-</code></pre>
-<p>Active virtualenv at project directory:</p>
-<pre><code>virtualenv venv --python=python3
-# On Windows
-.\venv\Script\activate
-# On Linux
-source venv/bin/activate
-</code></pre>
-<p>Install python package and code as usual in python virtual environment</p>
-<p>Freeze python package to requirements.txt<br>
-<code>pip freeze &gt; requirements.txt</code></p>
-<p>Install <code>serverless-python-requirements</code> and config the plugin at serverless.yml</p>
-<pre><code>npm install --save serverless-python-requirements
-</code></pre>
-<pre><code>service: project-name # NOTE: update this with your service name
-provider:
-  name: aws
-  runtime: python3.6
-  region: aws-reagon
-  role: aws-iam-role-with-the-privilidge-to-create-lambda-function
-plugins:
-  - serverless-python-requirements
-# you can add packaging information here
-package:
-  exclude:
-     - vent/**
-
-functions:
-  hello:
-    handler: handler.hello
-    events:
-      - http:
-          path: hello
-          method: get
-          cors: true
-          integration: LAMBDA
-      - schedule: rate(1 hour)
-</code></pre>
-<p>Deploy to AWS:</p>
-<pre><code></code></pre>
 ]]></summary>
         <content type="html"><![CDATA[<ul>
 <li>Install/start Docker</li>
@@ -73,6 +31,7 @@ functions:
 <li>Install serverless: npm install -g serverless</li>
 <li>Install virtualenv of python pip install virtualenv</li>
 </ul>
+<!-- more -->
 <p>Create Serverless project</p>
 <pre><code>serverless create   --template aws-python3  --name project-name  --path project-path
 </code></pre>
@@ -124,6 +83,265 @@ serverless deploy
 <li>serverless logs --function hello #check last log</li>
 <li>serverless invoke -f hello --log #invoke the function</li>
 </ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[About Me]]></title>
+        <id>https://jevy.wang/post/about-me/</id>
+        <link href="https://jevy.wang/post/about-me/">
+        </link>
+        <updated>2021-03-06T14:26:59.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="jevy-wang">Jevy Wang</h1>
+<p>#github:</p>
+<h1 id=""></h1>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[IP Camera BAT 310 Hacking]]></title>
+        <id>https://jevy.wang/post/2020-02-28-i-post-ip-camera-hacking/</id>
+        <link href="https://jevy.wang/post/2020-02-28-i-post-ip-camera-hacking/">
+        </link>
+        <updated>2020-02-27T22:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<p>Got a Solar WiFi IP camera from <a href="https://www.ebay.com.au/itm/302918525683?ul_noapp=true">Wireless Solar IP67 Security Camera System Outdoor Home Cam 1080P 2MP</a><br>
+Wondering to control this camera using script/program.</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Got a Solar WiFi IP camera from <a href="https://www.ebay.com.au/itm/302918525683?ul_noapp=true">Wireless Solar IP67 Security Camera System Outdoor Home Cam 1080P 2MP</a><br>
+Wondering to control this camera using script/program.</p>
+<!-- more -->
+<p>To activate/wakeup, the camera has to be set correctly:</p>
+<ol>
+<li>The camera is connected to the Internet, and its status should be shown as ‘online’ on Microshare, Danale mobile client.</li>
+</ol>
+<p>Active the camera using python script:</p>
+<pre><code class="language-python">import socket, sys
+import binascii
+dest = ('camera ip address', 'any port)
+# sending these hex code  in UDP protocal to active camera
+packet = binascii.unhexlify(&quot;0000000a983b16f8f39c&quot;)
+s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+s.sendto(bytes(packet), dest)
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Translante IDL script to python]]></title>
+        <id>https://jevy.wang/post/2020-02-04-i-post-translate-idl-to-python/</id>
+        <link href="https://jevy.wang/post/2020-02-04-i-post-translate-idl-to-python/">
+        </link>
+        <updated>2020-02-03T19:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<h2 id="idl-programming-language">IDL programming language</h2>
+<p>IDL, short for Interactive Data Language, is a programming language used for data analysis. It is popular in particular areas of science, such as astronomy, atmospheric physics and medical imaging. (https://en.wikipedia.org/wiki/IDL_(programming_language))</p>
+]]></summary>
+        <content type="html"><![CDATA[<h2 id="idl-programming-language">IDL programming language</h2>
+<p>IDL, short for Interactive Data Language, is a programming language used for data analysis. It is popular in particular areas of science, such as astronomy, atmospheric physics and medical imaging. (https://en.wikipedia.org/wiki/IDL_(programming_language))</p>
+<!-- more -->
+<h2 id="idl-to-python-numpy-document">IDL to python (numpy) document</h2>
+<ul>
+<li>(IDL to Numeric/numarray Mapping)[https://www.johnny-lin.com/cdat_tips/tips_array/idl2num.html]</li>
+<li>(NumPy for IDL users)[http://mathesaurus.sourceforge.net/idl-numpy.html]</li>
+</ul>
+<h2 id="idlwrap-api">idlwrap API</h2>
+<p>idlwrap helps you port IDL code to python by providing an IDL-like interface to numpy and scipy.</p>
+<ul>
+<li>(API)[https://r4lv.github.io/idlwrap/api.html]</li>
+</ul>
+<h2 id="note">Note</h2>
+<ul>
+<li>Array
+<ul>
+<li>IDL a[i, *] is the same with Python a[:,i]<br>
+There are two different ways of storing a matrix/array in memory: column-major and row-major.</li>
+<li>IDL array index include the last element:<pre><code class="language-IDL">IDL&gt; (FLTARR(10))[3:5]
+ 0.00000      0.00000      0.00000 ; -&gt; three elements
+</code></pre>
+<pre><code>&gt;&gt;&gt; np.zeros(10)[3:5]
+array([0., 0.]) # -&gt; two elements
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Parse URL params using API Gateway and lambda]]></title>
+        <id>https://jevy.wang/post/2019-12-13-i-post-create-api-on-aws-lambda/</id>
+        <link href="https://jevy.wang/post/2019-12-13-i-post-create-api-on-aws-lambda/">
+        </link>
+        <updated>2019-12-12T19:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<h2 id="lambda-script">Lambda script</h2>
+<p>Lambda could collect POST boday and url params using <code>event</code> . For POST body, params could be extracted directly like <code>event['param1']</code>.<br>
+As of September 2017, you no longer have to configure mappings to access the request body.<br>
+All you need to do is check, &quot;Use Lambda Proxy integration&quot;, under Integration Request, under the resource of AWS API Gateway.</p>
+]]></summary>
+        <content type="html"><![CDATA[<h2 id="lambda-script">Lambda script</h2>
+<p>Lambda could collect POST boday and url params using <code>event</code> . For POST body, params could be extracted directly like <code>event['param1']</code>.<br>
+As of September 2017, you no longer have to configure mappings to access the request body.<br>
+All you need to do is check, &quot;Use Lambda Proxy integration&quot;, under Integration Request, under the resource of AWS API Gateway.</p>
+<!-- more -->
+<p>You'll then be able to access query parameters, path parameters and headers like so</p>
+<pre><code>event['pathParameters']['param1']
+event[&quot;queryStringParameters&quot;]['queryparam1']
+event['requestContext']['identity']['userAgent']
+event['requestContext']['identity']['sourceIP']
+</code></pre>
+<p>For proxied API, the hander function should return the reponse in following format:</p>
+<pre><code class="language-json">{
+    &quot;isBase64Encoded&quot;: true|false,
+    &quot;statusCode&quot;: httpStatusCode,
+    &quot;headers&quot;: { &quot;headerName&quot;: &quot;headerValue&quot;, ... },
+    &quot;body&quot;: &quot;...&quot;
+}
+</code></pre>
+<p>Usually, when you see Malformed Lambda proxy response, it means your response from your Lambda function doesn't match the format API Gateway is expecting.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Add an image layer to react mapbox gl]]></title>
+        <id>https://jevy.wang/post/2019-12-10-i-post-add-image-layer-to-react-mapbox-gl/</id>
+        <link href="https://jevy.wang/post/2019-12-10-i-post-add-image-layer-to-react-mapbox-gl/">
+        </link>
+        <updated>2019-12-09T19:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<p>Images could be added to mapbox using a <code>Layer</code> and <code>Source</code>.</p>
+<h2 id="layer-configuration">Layer configuration</h2>
+<p>Prepare a source configuration by referenceing (this document)[https://docs.mapbox.com/mapbox-gl-js/style-spec/#sources-image]</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Images could be added to mapbox using a <code>Layer</code> and <code>Source</code>.</p>
+<h2 id="layer-configuration">Layer configuration</h2>
+<p>Prepare a source configuration by referenceing (this document)[https://docs.mapbox.com/mapbox-gl-js/style-spec/#sources-image]</p>
+<!-- more -->
+<pre><code class="language-json">const Image_SOURCE_OPTIONS = {
+    &quot;type&quot;: &quot;image&quot;,
+    &quot;url&quot;: &quot;https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif&quot;,
+    &quot;coordinates&quot;: [
+        [-80.425, 46.437],
+        [-71.516, 46.437],
+        [-71.516, 37.936],
+        [-80.425, 37.936]
+    ] 
+};
+</code></pre>
+<p>For base64 image, the url could be <code>data:image/png;base64,</code> + base64 image data:</p>
+<pre><code class="language-json">const Image_SOURCE_OPTIONS = {
+    &quot;type&quot;: &quot;image&quot;,
+    &quot;url&quot;: &quot;data:image/png;base64,...&quot;,
+    &quot;coordinates&quot;: [
+        [-80.425, 46.437],
+        [-71.516, 46.437],
+        [-71.516, 37.936],
+        [-80.425, 37.936]
+    ] 
+};
+</code></pre>
+<h1 id="create-a-source">Create a Source</h1>
+<pre><code class="language-html">&lt;Source id=&quot;source_id&quot; tileJsonSource={RASTER_SOURCE_OPTIONS} /&gt;
+</code></pre>
+<h2 id="create-a-layer">Create a Layer</h2>
+<p>Reference (react-mapbox-gl document)[https://github.com/alex3165/react-mapbox-gl/blob/master/docs/API.md#layer], the type could only be <code>symbol</code>, <code>line</code>, <code>raster</code>, ...</p>
+<pre><code class="language-html"> &lt;Layer type=&quot;raster&quot; id=&quot;layer_id&quot; sourceId=&quot;source_id&quot; /&gt;
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Add an image layer to react mapbox gl]]></title>
+        <id>https://jevy.wang/post/2019-09-11-i-post-add-image-layer-to-react-mapbox-gl/</id>
+        <link href="https://jevy.wang/post/2019-09-11-i-post-add-image-layer-to-react-mapbox-gl/">
+        </link>
+        <updated>2019-09-10T18:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<p>Images could be added to mapbox using a <code>Layer</code> and a <code>Source</code> component.</p>
+<h2 id="layer-configuration">Layer configuration</h2>
+<p>Prepare a source configuration by referenceing (this document)[https://docs.mapbox.com/mapbox-gl-js/style-spec/#sources-image]</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Images could be added to mapbox using a <code>Layer</code> and a <code>Source</code> component.</p>
+<h2 id="layer-configuration">Layer configuration</h2>
+<p>Prepare a source configuration by referenceing (this document)[https://docs.mapbox.com/mapbox-gl-js/style-spec/#sources-image]</p>
+<!-- more -->
+<pre><code class="language-json">const Image_SOURCE_OPTIONS = {
+    &quot;type&quot;: &quot;image&quot;,
+    &quot;url&quot;: &quot;https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif&quot;,
+    &quot;coordinates&quot;: [
+        [-80.425, 46.437],
+        [-71.516, 46.437],
+        [-71.516, 37.936],
+        [-80.425, 37.936]
+    ] 
+};
+</code></pre>
+<p>For base64 image, the url could be <code>data:image/png;base64,</code> + base64 image data:</p>
+<pre><code class="language-json">const Image_SOURCE_OPTIONS = {
+    &quot;type&quot;: &quot;image&quot;,
+    &quot;url&quot;: &quot;data:image/png;base64,...&quot;,
+    &quot;coordinates&quot;: [
+        [-80.425, 46.437],
+        [-71.516, 46.437],
+        [-71.516, 37.936],
+        [-80.425, 37.936]
+    ] 
+};
+</code></pre>
+<h1 id="create-a-source">Create a Source</h1>
+<pre><code class="language-html">&lt;Source id=&quot;source_id&quot; tileJsonSource={RASTER_SOURCE_OPTIONS} /&gt;
+</code></pre>
+<h2 id="create-a-layer">Create a Layer</h2>
+<p>Reference (react-mapbox-gl document)[https://github.com/alex3165/react-mapbox-gl/blob/master/docs/API.md#layer], the type could only be <code>symbol</code>, <code>line</code>, <code>raster</code>, ...</p>
+<pre><code class="language-html"> &lt;Layer type=&quot;raster&quot; id=&quot;layer_id&quot; sourceId=&quot;source_id&quot; /&gt;
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Copy data using google cloud gsutil]]></title>
+        <id>https://jevy.wang/post/2019-09-11-i-post-get-data-from-google-storage/</id>
+        <link href="https://jevy.wang/post/2019-09-11-i-post-get-data-from-google-storage/">
+        </link>
+        <updated>2019-09-10T18:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<h2 id="software">Software</h2>
+<ul>
+<li>Install gcloud with gsutil included</li>
+<li></li>
+</ul>
+]]></summary>
+        <content type="html"><![CDATA[<h2 id="software">Software</h2>
+<ul>
+<li>Install gcloud with gsutil included</li>
+<li></li>
+</ul>
+<!-- more -->
+<h2 id="login-google-cloud-using-json-file">Login google cloud using json file</h2>
+<p>document: https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account</p>
+<pre><code class="language-bash">gcloud auth activate-service-account test@test.iam.gserviceaccount.com --key-file=./secret.json
+
+</code></pre>
+<h2 id="copy-data">Copy data</h2>
+<p>reference this document for detail: https://cloud.google.com/storage/docs/gsutil/commands/cp</p>
+<p>-copy bucket data to local</p>
+<pre><code class="language-bash">gsutil -m cp -r gs://my-bucket/data ./data
+</code></pre>
+<h2 id="rsync-data">rsync data</h2>
+<p>reference this document for detail: https://cloud.google.com/storage/docs/gsutil/commands/rsync</p>
+<ul>
+<li>rsync local data from bucket</li>
+</ul>
+<pre><code class="language-bash">gsutil -m rsync -d -r gs://mybucket/data  ./data
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[IP Camera BAT 310 Hacking]]></title>
+        <id>https://jevy.wang/post/2019-09-11-i-post-goaccess-analysis-k8s-nginx-log/</id>
+        <link href="https://jevy.wang/post/2019-09-11-i-post-goaccess-analysis-k8s-nginx-log/">
+        </link>
+        <updated>2019-09-10T18:00:00.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="software">Software</h2>
+<ul>
+<li>use this document to update goaccess to the latest version: https://goaccess.io/download</li>
+<li>use this document to find the suitable log format: https://github.com/allinurl/goaccess/blob/master/config/goaccess.conf</li>
+<li>install jq linux tool</li>
+<li></li>
+</ul>
+<h2 id="analysis-k8s-nginx-log">Analysis K8S nginx log</h2>
+<pre><code class="language-bash">find */* -type f  -exec jq &quot;.textPayload&quot; \{\} \; | goaccess --log-format='%^ %^ [%h] %^ %^ [%d:%t %^] \&quot;%r\&quot; %^ %b \&quot;%R\&quot; \&quot;%u\&quot; %^ %^ [%v] %^:%^ %^ %T %^ %^' --date-format=%d/%b/%Y --time-format=%H:%M:%S - --with-output-resolver -o out.html
+</code></pre>
 ]]></content>
     </entry>
     <entry>
