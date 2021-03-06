@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://jevy.wang</id>
+    <title>Jevy Wang&apos;s Blog</title>
+    <updated>2021-03-06T07:08:51.773Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://jevy.wang"/>
+    <link rel="self" href="https://jevy.wang/atom.xml"/>
+    <subtitle>Notes </subtitle>
+    <logo>https://jevy.wang/images/avatar.png</logo>
+    <icon>https://jevy.wang/favicon.ico</icon>
+    <rights>All rights reserved 2021, Jevy Wang&apos;s Blog</rights>
+    <entry>
+        <title type="html"><![CDATA[Package AWS Lambda function]]></title>
+        <id>https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/</id>
+        <link href="https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/">
+        </link>
+        <updated>2021-03-06T12:40:14.000Z</updated>
+        <summary type="html"><![CDATA[<ul>
+<li>Install/start Docker</li>
+<li>Install python3</li>
+<li>Install nodejs (npm included)</li>
+<li>Install serverless: npm install -g serverless</li>
+<li>Install virtualenv of python pip install virtualenv</li>
+</ul>
+<p>Create Serverless project</p>
+<pre><code>serverless create   --template aws-python3  --name project-name  --path project-path
+</code></pre>
+<p>Active virtualenv at project directory:</p>
+<pre><code>virtualenv venv --python=python3
+# On Windows
+.\venv\Script\activate
+# On Linux
+source venv/bin/activate
+</code></pre>
+<p>Install python package and code as usual in python virtual environment</p>
+<p>Freeze python package to requirements.txt<br>
+<code>pip freeze &gt; requirements.txt</code></p>
+<p>Install <code>serverless-python-requirements</code> and config the plugin at serverless.yml</p>
+<pre><code>npm install --save serverless-python-requirements
+</code></pre>
+<pre><code>service: project-name # NOTE: update this with your service name
+provider:
+  name: aws
+  runtime: python3.6
+  region: aws-reagon
+  role: aws-iam-role-with-the-privilidge-to-create-lambda-function
+plugins:
+  - serverless-python-requirements
+# you can add packaging information here
+package:
+  exclude:
+     - vent/**
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+          cors: true
+          integration: LAMBDA
+      - schedule: rate(1 hour)
+</code></pre>
+<p>Deploy to AWS:</p>
+<pre><code></code></pre>
+]]></summary>
+        <content type="html"><![CDATA[<ul>
+<li>Install/start Docker</li>
+<li>Install python3</li>
+<li>Install nodejs (npm included)</li>
+<li>Install serverless: npm install -g serverless</li>
+<li>Install virtualenv of python pip install virtualenv</li>
+</ul>
+<p>Create Serverless project</p>
+<pre><code>serverless create   --template aws-python3  --name project-name  --path project-path
+</code></pre>
+<p>Active virtualenv at project directory:</p>
+<pre><code>virtualenv venv --python=python3
+# On Windows
+.\venv\Script\activate
+# On Linux
+source venv/bin/activate
+</code></pre>
+<p>Install python package and code as usual in python virtual environment</p>
+<p>Freeze python package to requirements.txt<br>
+<code>pip freeze &gt; requirements.txt</code></p>
+<p>Install <code>serverless-python-requirements</code> and config the plugin at serverless.yml</p>
+<pre><code>npm install --save serverless-python-requirements
+</code></pre>
+<pre><code>service: project-name # NOTE: update this with your service name
+provider:
+  name: aws
+  runtime: python3.6
+  region: aws-reagon
+  role: aws-iam-role-with-the-privilidge-to-create-lambda-function
+plugins:
+  - serverless-python-requirements
+# you can add packaging information here
+package:
+  exclude:
+     - vent/**
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+          cors: true
+          integration: LAMBDA
+      - schedule: rate(1 hour)
+</code></pre>
+<p>Deploy to AWS:</p>
+<pre><code>&lt;!-- more --&gt;
+
+serverless deploy
+
+</code></pre>
+<p>Useful tools:</p>
+<ul>
+<li>serverless logs --function hello #check last log</li>
+<li>serverless invoke -f hello --log #invoke the function</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[test]]></title>
+        <id>https://jevy.wang/post/test/</id>
+        <link href="https://jevy.wang/post/test/">
+        </link>
+        <updated>2021-03-02T09:42:43.000Z</updated>
+        <content type="html"><![CDATA[<p>tesfsdf</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Install owncloud with docker and local directory]]></title>
+        <id>https://jevy.wang/post/2019-06-07-install-owncloud-with-docker-and-local-directory/</id>
+        <link href="https://jevy.wang/post/2019-06-07-install-owncloud-with-docker-and-local-directory/">
+        </link>
+        <updated>2019-06-07T12:40:14.000Z</updated>
+        <content type="html"><![CDATA[<p>I was struggled on installing owncloud barely on ubuntu 18, and spent hours on install and config its dependencies, but failed on database script execution.</p>
+<p>During googling to solve my problem, I noticed a dockerized owncloud, and find it's pretty easy to setup.</p>
+<p>Here is the installation/configuration log:</p>
+<p><strong>Install docker and docker-compose</strong></p>
+<ul>
+<li><a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">docker</a></li>
+<li><a href="https://docs.docker.com/compose/install/">docker-compose</a></li>
+</ul>
+<p><strong>Prepare a docker-compose.yml</strong> :</p>
+<p>Referenced  this <a href="https://doc.owncloud.com/server/admin_manual/installation/docker/">Installing with Docker</a><br>
+and this <a href="https://raw.githubusercontent.com/owncloud-docker/server/master/docker-compose.yml">yml file</a> to make my own docker-compose.yml file.</p>
+<p>Because I have a RDS instance on cloud, and a NAS storage mounted on this server, I was wondering to reuse them. So I removed the volumns and db dependencies from the yml file.<br>
+Becuase this owncloud file sharing will be used by very few users, and the VM will have extra charge for CPU usage, I removed redis.</p>
+<pre><code class="language-yml">version: '2.1'
+
+services:
+  owncloud:
+    image: owncloud/server:10.0
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      - OWNCLOUD_DOMAIN=localhost
+      - OWNCLOUD_DB_TYPE=mysql
+      - OWNCLOUD_DB_NAME=db_name
+      - OWNCLOUD_DB_USERNAME=db_username
+      - OWNCLOUD_DB_PASSWORD=db_password
+      # db can be any remote url with accessing privilidge
+      - OWNCLOUD_DB_HOST=db_url
+      - OWNCLOUD_ADMIN_USERNAME=admin
+      - OWNCLOUD_ADMIN_PASSWORD=admin
+      # for owncloud &gt;= 9.0, add this config to allow local directory as external storage
+      - OWNCLOUD_ALLOW_EXTERNAL_LOCAL_STORAGE=true
+    healthcheck:
+      test: [&quot;CMD&quot;, &quot;/usr/bin/healthcheck&quot;]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - /mnt/data/owncloud:/mnt/data
+      - /other-directory1:/mnt/data/d1
+      - /other-directory2:/mnt/data/d2
+
+</code></pre>
+<p>Use command <code>sudo docker-compose up -d</code> to start owncloud, and access it through <code>server_ip:8080</code>.<br>
+Please add port <code>8080</code> to your VM's network route rule.</p>
+<p><strong>Add local storage</strong> :</p>
+<p>Reference this <a href="https://doc.owncloud.com/server/admin_manual/configuration/files/external_storage/local.html">Local storage</a> to add local directory.</p>
+<p><strong>usefull notes</strong></p>
+<ul>
+<li>scan files copied to owncloud directory: <code>docker-compose exec owncloud occ files:scan --all</code></li>
+</ul>
+]]></content>
+    </entry>
+</feed>
