@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://jevy.wang</id>
     <title>Jevy Wang&apos;s Blog</title>
-    <updated>2021-03-06T11:35:07.376Z</updated>
+    <updated>2021-03-06T11:41:56.604Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://jevy.wang"/>
     <link rel="self" href="https://jevy.wang/atom.xml"/>
@@ -83,17 +83,6 @@ serverless deploy
 <li>serverless logs --function hello #check last log</li>
 <li>serverless invoke -f hello --log #invoke the function</li>
 </ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[About Me]]></title>
-        <id>https://jevy.wang/post/about-me/</id>
-        <link href="https://jevy.wang/post/about-me/">
-        </link>
-        <updated>2021-03-06T14:26:59.000Z</updated>
-        <content type="html"><![CDATA[<h1 id="jevy-wang">Jevy Wang</h1>
-<p>#github:</p>
-<h1 id=""></h1>
 ]]></content>
     </entry>
     <entry>
@@ -402,6 +391,34 @@ Please add port <code>8080</code> to your VM's network route rule.</p>
 <ul>
 <li>scan files copied to owncloud directory: <code>docker-compose exec owncloud occ files:scan --all</code></li>
 </ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Read H264 livestream using ffmpeg and cv2]]></title>
+        <id>https://jevy.wang/post/2019-02-28-i-post-read-h264-livestream/</id>
+        <link href="https://jevy.wang/post/2019-02-28-i-post-read-h264-livestream/">
+        </link>
+        <updated>2019-02-27T19:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<p>Got a Solar WiFi IP camera from <a href="https://www.ebay.com.au/itm/302918525683?ul_noapp=true">Wireless Solar IP67 Security Camera System Outdoor Home Cam 1080P 2MP</a></p>
+<p>Wondering to capture video or images from the camera using script/program.</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Got a Solar WiFi IP camera from <a href="https://www.ebay.com.au/itm/302918525683?ul_noapp=true">Wireless Solar IP67 Security Camera System Outdoor Home Cam 1080P 2MP</a></p>
+<p>Wondering to capture video or images from the camera using script/program.</p>
+<!-- more -->
+<p><code>ffmpeg -re -i &quot;http://host ip:81/livestream.cgi?user=admin&amp;pwd=&amp;streamid=0&quot; -c copy -f mpegts test.mp4</code></p>
+<p><code>ffmpeg -i &quot;http://host ip:81/livestream.cgi?user=admin&amp;pwd=a123&amp;streamid=0&quot; -c copy -f mpegts -ss 5 -frames:v 5 testt.png</code></p>
+<p>FFMPEG is not portable, another way of using cv2 to capture a picture:<br>
+(ref <a href="https://stackoverflow.com/questions/28477600/not-able-to-play-h264-video-on-opencv">Not able to play .h264 video on OpenCV?</a>)</p>
+<pre><code class="language-python">cap = cv2.VideoCapture('http://host:81/livestream.cgi?user=admin&amp;pwd=&amp;streamid=0')
+        while(cap.isOpened()):
+            ret, frame = cap.read()
+            # write to local file
+            cv2.imwrite(&quot;capture.png&quot;,frame)
+            # create memory file object save to AWS S3
+            #img_data = io.BytesIO(cv2.imencode('.png', frame)[1])
+            break
+        cap.release()
+</code></pre>
 ]]></content>
     </entry>
 </feed>
