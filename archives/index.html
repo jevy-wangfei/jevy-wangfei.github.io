@@ -9,7 +9,7 @@
 <meta name="description" content="Notes ">
 <meta name="theme-color" content="#0b7285">
 <title>Jevy Wang&#39;s Blog</title>
-<link rel="shortcut icon" href="/favicon.ico?v=1615030909458">
+<link rel="shortcut icon" href="/favicon.ico?v=1615161237180">
 <link rel="stylesheet" href="/media/css/pisces.css">
 <link rel="stylesheet" href="/media/fonts/font-awesome.css">
 <link
@@ -195,7 +195,7 @@
     <div class="sidebar-item-box">
       <a href="/archives/">
         
-        <span class="site-item-stat-count">11</span>
+        <span class="site-item-stat-count">14</span>
         <span class="site-item-stat-name language" data-lan="article">文章</span>
       </a>
     </div>
@@ -256,7 +256,7 @@
   <div class="archive-timeline-box">
     <div class="archive-timeline-title">
       
-        <h2 class="language" data-lan="archives" data-count="11">非常好！目前共计11篇日志，继续努力！</h2>
+        <h2 class="language" data-lan="archives" data-count="14">非常好！目前共计14篇日志，继续努力！</h2>
       
     </div>
     
@@ -267,12 +267,51 @@
         </div>    
         
       
-      <a href="https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/">
+      <a href="https://jevy.wang/post/2021-02-23-i-post-dockerize-conda/">
         <div class="motion-warpper tag-archive-node">
           <div class="tag-node">
             <h1>
-              03-07
-              <small>Package AWS Lambda function</small>
+              02-23
+              <small>Dockerize conda</small>
+            </h1>
+          </div>  
+      </div>
+      </a>
+    
+      
+      
+      <a href="https://jevy.wang/post/2021-02-23-i-post-panel-serve-to-public/">
+        <div class="motion-warpper tag-archive-node">
+          <div class="tag-node">
+            <h1>
+              02-23
+              <small>Panel serve to public</small>
+            </h1>
+          </div>  
+      </div>
+      </a>
+    
+      
+      
+      <a href="https://jevy.wang/post/2021-02-23-i-post-panel-serve/">
+        <div class="motion-warpper tag-archive-node">
+          <div class="tag-node">
+            <h1>
+              02-23
+              <small>Panel serve</small>
+            </h1>
+          </div>  
+      </div>
+      </a>
+    
+      
+      
+      <a href="https://jevy.wang/post/2021-02-23-i-post-tips-using-azure/">
+        <div class="motion-warpper tag-archive-node">
+          <div class="tag-node">
+            <h1>
+              02-23
+              <small>Tips of using Azure</small>
             </h1>
           </div>  
       </div>
@@ -284,6 +323,19 @@
           <h2 class="tag-year">2020</h2>
         </div>    
         
+      
+      <a href="https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/">
+        <div class="motion-warpper tag-archive-node">
+          <div class="tag-node">
+            <h1>
+              03-18
+              <small>Package AWS Lambda function</small>
+            </h1>
+          </div>  
+      </div>
+      </a>
+    
+      
       
       <a href="https://jevy.wang/post/2020-02-28-i-post-ip-camera-hacking/">
         <div class="motion-warpper tag-archive-node">
@@ -342,19 +394,6 @@
     
       
       
-      <a href="https://jevy.wang/post/2019-09-11-i-post-add-image-layer-to-react-mapbox-gl/">
-        <div class="motion-warpper tag-archive-node">
-          <div class="tag-node">
-            <h1>
-              09-11
-              <small>Add an image layer to react mapbox gl</small>
-            </h1>
-          </div>  
-      </div>
-      </a>
-    
-      
-      
       <a href="https://jevy.wang/post/2019-09-11-i-post-get-data-from-google-storage/">
         <div class="motion-warpper tag-archive-node">
           <div class="tag-node">
@@ -373,7 +412,7 @@
           <div class="tag-node">
             <h1>
               09-11
-              <small>IP Camera BAT 310 Hacking</small>
+              <small>GoAccess process K8S web log</small>
             </h1>
           </div>  
       </div>
@@ -385,7 +424,7 @@
         <div class="motion-warpper tag-archive-node">
           <div class="tag-node">
             <h1>
-              06-07
+              06-08
               <small>Install owncloud with docker and local directory</small>
             </h1>
           </div>  
@@ -668,6 +707,411 @@
     <div class="result" id="result">
       
       <div class="item">
+        <a class="result-title" style="opacity: 0;" href="https://jevy.wang/post/2021-02-23-i-post-dockerize-conda/"" data-c="
+          &lt;h1 id=&#34;wrap-conda-into-docker&#34;&gt;Wrap conda into docker&lt;/h1&gt;
+&lt;h2 id=&#34;prepare-envyml-file&#34;&gt;prepare env.yml file&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&#34;language-json&#34;&gt;name: test
+channels:
+  - conda-forge
+dependencies:
+  - flask
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;prepare-dockerfile&#34;&gt;prepare Dockerfile&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;FROM continuumio/miniconda3
+
+WORKDIR /conda
+
+# Create conda env using env.yml:
+COPY env.yml .
+RUN conda env create -f env.yml
+
+# Should activate the conda env test here, but execute conda activate test will throw an error:  conda init is required
+
+# This code does not help too
+# RUN source ~/minikube/etc/profile.d/conda.sh
+# RUN conda activate test
+
+# That is because every new step of docker build, a new shell will be startup. 
+# The new shell would not know where is conda
+
+# This would also cause problem when executing the docker as another new shell will be created
+
+COPY . .
+
+# Here is the solution 
+ENTRYPOINT [&amp;quot;conda&amp;quot;, &amp;quot;run&amp;quot;, &amp;quot;--no-capture-output&amp;quot;, &amp;quot;-n&amp;quot;, &amp;quot;test&amp;quot;, &amp;quot;python&amp;quot;, &amp;quot;other_code.py&amp;quot;]
+&lt;/code&gt;&lt;/pre&gt;
+">Dockerize conda</a>
+      </div>
+      
+      <div class="item">
+        <a class="result-title" style="opacity: 0;" href="https://jevy.wang/post/2021-02-23-i-post-panel-serve-to-public/"" data-c="
+          &lt;h1 id=&#34;panel-serve-options&#34;&gt;panel serve options&lt;/h1&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;# The pn.serve accepts a number of arguments: [source](https://docs.bokeh.org/en/latest/docs/reference/server/server.html#bokeh.server.server.Server)
+
+class Serve(Subcommand):
+    &#39;&#39;&#39; Subcommand to launch the Bokeh server.
+    &#39;&#39;&#39;
+
+    #: name for this subcommand
+    name = &amp;quot;serve&amp;quot;
+
+    help = &amp;quot;Run a Bokeh server hosting one or more applications&amp;quot;
+
+    args = base_serve_args + (
+        (&#39;files&#39;, dict(
+            metavar = &#39;DIRECTORY-OR-SCRIPT&#39;,
+            nargs   = &#39;*&#39;,
+            help    = &amp;quot;The app directories or scripts to serve (serve empty document if not specified)&amp;quot;,
+            default = None,
+        )),
+
+        (&#39;--args&#39;, dict(
+            metavar = &#39;COMMAND-LINE-ARGS&#39;,
+            nargs   = argparse.REMAINDER,
+            help    = &amp;quot;Command line arguments remaining to passed on to the application handler. &amp;quot;
+                      &amp;quot;NOTE: if this argument precedes DIRECTORY-OR-SCRIPT then some other argument, e.g. &amp;quot;
+                      &amp;quot;--show, must be placed before the directory or script. &amp;quot;,
+        )),
+
+        (&#39;--dev&#39;, dict(
+            metavar =&#39;FILES-TO-WATCH&#39;,
+            action  =&#39;store&#39;,
+            default = None,
+            type    = str,
+            nargs   = &#39;*&#39;,
+            help    = &amp;quot;Enable live reloading during app development. &amp;quot;
+                      &amp;quot;By default it watches all *.py *.html *.css *.yaml files &amp;quot;
+                      &amp;quot;in the app directory tree. Additional files can be passed &amp;quot;
+                      &amp;quot;as arguments. &amp;quot;
+                      &amp;quot;NOTE: if this argument precedes DIRECTORY-OR-SCRIPT then some other argument, e.g &amp;quot;
+                      &amp;quot;--show, must be placed before the directory or script. &amp;quot;
+                      &amp;quot;NOTE: This setting only works with a single app. &amp;quot;
+                      &amp;quot;It also restricts the number of processes to 1. &amp;quot;
+                      &amp;quot;NOTE FOR WINDOWS USERS : this option must be invoked using &amp;quot;
+                      &amp;quot;&#39;python -m bokeh&#39;. If not Tornado will fail to restart the &amp;quot;
+                      &amp;quot;server&amp;quot;,
+        )),
+
+        (&#39;--show&#39;, dict(
+            action = &#39;store_true&#39;,
+            help   = &amp;quot;Open server app(s) in a browser&amp;quot;,
+        )),
+
+        (&#39;--allow-websocket-origin&#39;, dict(
+            metavar = &#39;HOST[:PORT]&#39;,
+            action  = &#39;append&#39;,
+            type    = str,
+            help    = &amp;quot;Public hostnames which may connect to the Bokeh websocket&amp;quot;,
+        )),
+
+        (&#39;--prefix&#39;, dict(
+            metavar = &#39;PREFIX&#39;,
+            type    = str,
+            help    = &amp;quot;URL prefix for Bokeh server URLs&amp;quot;,
+            default = None,
+        )),
+
+        (&#39;--keep-alive&#39;, dict(
+            metavar = &#39;MILLISECONDS&#39;,
+            type    = int,
+            help    = &amp;quot;How often to send a keep-alive ping to clients, 0 to disable.&amp;quot;,
+            default = None,
+        )),
+
+        (&#39;--check-unused-sessions&#39;, dict(
+            metavar = &#39;MILLISECONDS&#39;,
+            type    = int,
+            help    = &amp;quot;How often to check for unused sessions&amp;quot;,
+            default = None,
+        )),
+
+        (&#39;--unused-session-lifetime&#39;, dict(
+            metavar = &#39;MILLISECONDS&#39;,
+            type    = int,
+            help    = &amp;quot;How long unused sessions last&amp;quot;,
+            default = None,
+        )),
+
+        (&#39;--stats-log-frequency&#39;, dict(
+            metavar = &#39;MILLISECONDS&#39;,
+            type    = int,
+            help    = &amp;quot;How often to log stats&amp;quot;,
+            default = None,
+        )),
+
+        (&#39;--mem-log-frequency&#39;, dict(
+            metavar = &#39;MILLISECONDS&#39;,
+            type    = int,
+            help    = &amp;quot;How often to log memory usage information&amp;quot;,
+            default = None,
+        )),
+
+        (&#39;--use-xheaders&#39;, dict(
+            action = &#39;store_true&#39;,
+            help   = &amp;quot;Prefer X-headers for IP/protocol information&amp;quot;,
+        )),
+
+        (&#39;--ssl-certfile&#39;, dict(
+            metavar = &#39;CERTFILE&#39;,
+            action  = &#39;store&#39;,
+            default = None,
+            help    = &#39;Absolute path to a certificate file for SSL termination&#39;,
+        )),
+
+        (&#39;--ssl-keyfile&#39;, dict(
+            metavar = &#39;KEYFILE&#39;,
+            action  = &#39;store&#39;,
+            default = None,
+            help    = &#39;Absolute path to a private key file for SSL termination&#39;,
+        )),
+
+        (&#39;--session-ids&#39;, dict(
+            metavar = &#39;MODE&#39;,
+            action  = &#39;store&#39;,
+            default = None,
+            choices = SESSION_ID_MODES,
+            help    = &amp;quot;One of: %s&amp;quot; % nice_join(SESSION_ID_MODES),
+        )),
+
+        (&#39;--auth-module&#39;, dict(
+            metavar = &#39;AUTH_MODULE&#39;,
+            action  = &#39;store&#39;,
+            default = None,
+            help    = &#39;Absolute path to a Python module that implements auth hooks&#39;,
+        )),
+
+        (&#39;--enable-xsrf-cookies&#39;, dict(
+            action  = &#39;store_true&#39;,
+            default = False,
+            help    = &#39;Whether to enable Tornado support for XSRF cookies. All &#39;
+                      &#39;PUT, POST, or DELETE handlers must be properly instrumented &#39;
+                      &#39;when this setting is enabled.&#39;
+        )),
+
+        (&#39;--exclude-headers&#39;, dict(
+            action  = &#39;store&#39;,
+            default = None,
+            nargs=&#39;+&#39;,
+            help    = &#39;A list of request headers to exclude from the session &#39;
+                      &#39;context (by default all headers are included).&#39;
+        )),
+
+        (&#39;--exclude-cookies&#39;, dict(
+            action  = &#39;store&#39;,
+            default = None,
+            nargs=&#39;+&#39;,
+            help    = &#39;A list of request cookies to exclude from the session &#39;
+                      &#39;context (by default all cookies are included).&#39;
+        )),
+
+        (&#39;--include-headers&#39;, dict(
+            action  = &#39;store&#39;,
+            default = None,
+            nargs=&#39;+&#39;,
+            help    = &#39;A list of request headers to make available in the session &#39;
+                      &#39;context (by default all headers are included).&#39;
+        )),
+
+        (&#39;--include-cookies&#39;, dict(
+            action  = &#39;store&#39;,
+            default = None,
+            nargs=&#39;+&#39;,
+            help    = &#39;A list of request cookies to make available in the session &#39;
+                      &#39;context (by default all cookies are included).&#39;
+        )),
+
+        (&#39;--cookie-secret&#39;, dict(
+            metavar = &#39;COOKIE_SECRET&#39;,
+            action  = &#39;store&#39;,
+            default = None,
+            help    = &#39;Configure to enable getting/setting secure cookies&#39;,
+        )),
+
+        (&#39;--index&#39;, dict(
+            metavar = &#39;INDEX&#39;,
+            action  = &#39;store&#39;,
+            default = None,
+            help    = &#39;Path to a template to use for the site index&#39;,
+        )),
+
+        (&#39;--disable-index&#39;, dict(
+            action = &#39;store_true&#39;,
+            help   = &#39;Do not use the default index on the root path&#39;,
+        )),
+
+        (&#39;--disable-index-redirect&#39;, dict(
+            action = &#39;store_true&#39;,
+            help   = &#39;Do not redirect to running app from root path&#39;,
+        )),
+
+        (&#39;--num-procs&#39;, dict(
+            metavar = &#39;N&#39;,
+            action  = &#39;store&#39;,
+            help    = &amp;quot;Number of worker processes for an app. Using &amp;quot;
+                      &amp;quot;0 will autodetect number of cores (defaults to 1)&amp;quot;,
+            default = 1,
+            type    = int,
+        )),
+
+        (&#39;--session-token-expiration&#39;, dict(
+            metavar = &#39;N&#39;,
+            action  = &#39;store&#39;,
+            help    = &amp;quot;Duration in seconds that a new session token &amp;quot;
+                      &amp;quot;is valid for session creation. After the expiry &amp;quot;
+                      &amp;quot;time has elapsed, the token will not be able &amp;quot;
+                      &amp;quot;create a new session (defaults to  seconds).&amp;quot;,
+            default = DEFAULT_SESSION_TOKEN_EXPIRATION,
+            type    = int,
+        )),
+
+        (&#39;--websocket-max-message-size&#39;, dict(
+            metavar = &#39;BYTES&#39;,
+            action  = &#39;store&#39;,
+            help    = &amp;quot;Set the Tornado websocket_max_message_size value &amp;quot;
+                      &amp;quot;(default: 20MB)&amp;quot;,
+            default = DEFAULT_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES,
+            type    = int,
+        )),
+
+        (&#39;--websocket-compression-level&#39;, dict(
+            metavar = &#39;LEVEL&#39;,
+            action  = &#39;store&#39;,
+            help    = &amp;quot;Set the Tornado WebSocket compression_level&amp;quot;,
+            default = None,
+            type    = int,
+        )),
+
+        (&#39;--websocket-compression-mem-level&#39;, dict(
+            metavar = &#39;LEVEL&#39;,
+            action  = &#39;store&#39;,
+            help    = &amp;quot;Set the Tornado WebSocket compression mem_level&amp;quot;,
+            default = None,
+            type    = int,
+        )),
+
+        (&#39;--glob&#39;, dict(
+            action=&#39;store_true&#39;,
+            help=&#39;Process all filename arguments as globs&#39;,
+        )),
+    )
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;address-serve-as-public-ip-address&#34;&gt;address - serve as public ip address&lt;/h2&gt;
+&lt;p&gt;setting the address=public ip, bokeh server will listen on this ip address. bokeh client could get the js script includes this public ip, which will be used for further bokeh js download and socket setup&lt;/p&gt;
+&lt;h2 id=&#34;-allow-websocket-origin&#34;&gt;--allow-websocket-origin&lt;/h2&gt;
+&lt;p&gt;The origin URLs can access the bokeh server. 403 will be returned for unlisted URLs.&lt;br&gt;
+&amp;quot;*&amp;quot; can be set to allow any origin.&lt;/p&gt;
+">Panel serve to public</a>
+      </div>
+      
+      <div class="item">
+        <a class="result-title" style="opacity: 0;" href="https://jevy.wang/post/2021-02-23-i-post-panel-serve/"" data-c="
+          &lt;h1 id=&#34;relationship-between-panel-holoviews-and-bokeh&#34;&gt;Relationship between panel, holoviews, and bokeh&lt;/h1&gt;
+&lt;p&gt;The HoloViews pane renders HoloViews plots with one of the plotting backends supported by HoloViews. It supports the regular HoloViews widgets for exploring the key dimensions of a HoloMap or DynamicMap, but is more flexible than the native HoloViews widgets since it also allows customizing widget types and their position relative to the plot. &lt;a href=&#34;https://panel.holoviz.org/reference/panes/HoloViews.html&#34;&gt;source&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;HoloViews supports backends: &#39;bokeh&#39;, &#39;matplotlib&#39;, or &#39;plotly&#39;&lt;/p&gt;
+&lt;h1 id=&#34;serve-panel&#34;&gt;Serve panel&lt;/h1&gt;
+&lt;h2 id=&#34;two-ways-of-serving-panel&#34;&gt;Two ways of serving panel&lt;/h2&gt;
+&lt;h3 id=&#34;servable-and-panel-serve-pyipynb&#34;&gt;.servable() and panel serve **.py/ipynb&lt;/h3&gt;
+&lt;p&gt;Any .py or .ipynb file that attaches a plot to Bokeh&#39;s curdoc can be deployed using panel serve. The easiest way to do this is using wrapping the HoloViews component in Panel using pn.panel(hvobj) and then calling the panel_obj.servable() method, which accepts any HoloViews object ensures that the plot is discoverable by Panel and the underlying Bokeh server. &lt;a href=&#34;http://holoviews.org/user_guide/Deploying_Bokeh_Apps.html&#34;&gt;source&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# Serve .py or .ipynb file
+panel serve --allow-websocket-origin=localhost:3000 --address=localhost --port=5006 **.py
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;# Serve .py or .ipynb file within Flask using Threading in different ports
+def services():
+    thread_pool = []
+    # json_files is a json configration, which includes multiple config sections
+    for json_file in json_files:
+        comm = f&#39;panel serve --allow-websocket-origin=localhost:3000 --address=localhost --port={str(json_file[&amp;quot;file_port&amp;quot;])}{json_file[&amp;quot;file_path&amp;quot;]}&#39;
+        thread_pool.append(comm)
+    return thread_pool
+
+# Run threads
+for comm in services():
+    Thread(target=os.system, args=(comm,)).start() 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;pnserve&#34;&gt;pn.serve()&lt;/h3&gt;
+&lt;p&gt;When using pn.serve all sessions will share the same state, and may cause a problem that a client&#39;s activity may affect other clients. Therefore it is best to wrap the creation of the app in a function which we can then provide to pn.serve. For example:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;xarray_dataset =  xr.open_dataset(&amp;quot;**.nc&amp;quot;)
+
+def plot(xarray_dataset):
+    image = ds_grouped_ndvi.hvplot(&#39;x&#39;, &#39;y&#39;).opts(cmap=&#39;RdYlGn&#39;)
+    stream = hv.streams.Tap(source=image, x=104, y=10)
+    @pn.depends(stream.param.x, stream.param.y)
+    def timeseries(x, y):
+        return xarray_dataset.sel(x=x, y=y, method=&#39;nearest&#39;).hvplot(&#39;time&#39;)
+    return pn.Column(image, timeseries)
+
+# This would cause sharing state issue
+pn.serve(plot(xarray_dataset))
+
+def serve_func():
+    return plot(xarray_dataset)
+# Because serving a function, every call will create a new function, and further new panel layout
+pn.serve(result_func)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;access-panel-service-in-url&#34;&gt;Access panel service in URL&lt;/h1&gt;
+&lt;h2 id=&#34;pull_session-and-server_session&#34;&gt;pull_session() and server_session()&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from bokeh.client import pull_session
+from bokeh.embed import server_session
+&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;pull_session() method at bokeh.client.session will not work for large socket message size. A config will exposed at bokeh 2.3.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;# FastAPI example
+@app.get(&amp;quot;/test&amp;quot;)
+def getViewByName(request: Request, ):
+    url = &#39;http://localhost:5006&#39;
+    with pull_session(url=url) as session:
+        script = server_session(session_id=session.id, url=url)
+    return templates.TemplateResponse(&#39;embed_div.html&#39;, context={&#39;request&#39;: request, &#39;script&#39;: script})
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;server_document&#34;&gt;server_document()&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from bokeh.embed import server_document
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;# FastAPI example
+@app.get(&amp;quot;/test4&amp;quot;)
+def getViewByName(request: Request, ):
+    url = &#39;http://localhost:5008&#39;
+    script = server_document(url)
+    return templates.TemplateResponse(&#39;embed_div.html&#39;, context={&#39;request&#39;: request, &#39;script&#39;: script})
+&lt;/code&gt;&lt;/pre&gt;
+">Panel serve</a>
+      </div>
+      
+      <div class="item">
+        <a class="result-title" style="opacity: 0;" href="https://jevy.wang/post/2021-02-23-i-post-tips-using-azure/"" data-c="
+          &lt;h1 id=&#34;monitoring-config&#34;&gt;Monitoring Config&lt;/h1&gt;
+&lt;p&gt;Azure Application insight has sampling feature (default enable) that will randomly ignore some of logs when it exceeds a specified threshold (unknown the threshold).&lt;br&gt;
+The Azure function monitoring tracking could tell you the failure or success by inspecting the log. The sampling feature would cause the problem of not telling you the result of function execution. &lt;a href=&#34;https://docs.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#configure-sampling&#34;&gt;source&lt;/a&gt;&lt;br&gt;
+Adding following config at Azure function host.json to disable it:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-json&#34;&gt;{
+  &amp;quot;logging&amp;quot;: {
+    &amp;quot;applicationInsights&amp;quot;: {
+      &amp;quot;samplingSettings&amp;quot;: {
+        &amp;quot;isEnabled&amp;quot;: false,
+        &amp;quot;maxTelemetryItemsPerSecond&amp;quot; : 20,
+        &amp;quot;excludedTypes&amp;quot;: &amp;quot;Request;Exception&amp;quot;
+      }
+    }
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;azure-function&#34;&gt;Azure Function&lt;/h1&gt;
+&lt;h2 id=&#34;shared&#34;&gt;Shared&lt;/h2&gt;
+&lt;p&gt;Because many functions (may not only yours) share computing resources, there are some limitations:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Multiple functions within a Azure function application may clash&lt;/li&gt;
+&lt;li&gt;There are many Azure defined limitations such as Threads, processes, connections, sockets, etc. &lt;a href=&#34;https://github.com/projectkudu/kudu/wiki/Azure-Web-App-sandbox#app-service-plans-and-sandbox-limits&#34;&gt;source&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;webapp&#34;&gt;webapp&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;So far so good, need pay higher fees. Didn&#39;t see values comparing with VMs.&lt;/li&gt;
+&lt;/ul&gt;
+">Tips of using Azure</a>
+      </div>
+      
+      <div class="item">
         <a class="result-title" style="opacity: 0;" href="https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/"" data-c="
           &lt;ul&gt;
 &lt;li&gt;Install/start Docker&lt;/li&gt;
@@ -852,45 +1296,6 @@ event[&#39;requestContext&#39;][&#39;identity&#39;][&#39;sourceIP&#39;]
       </div>
       
       <div class="item">
-        <a class="result-title" style="opacity: 0;" href="https://jevy.wang/post/2019-09-11-i-post-add-image-layer-to-react-mapbox-gl/"" data-c="
-          &lt;p&gt;Images could be added to mapbox using a &lt;code&gt;Layer&lt;/code&gt; and a &lt;code&gt;Source&lt;/code&gt; component.&lt;/p&gt;
-&lt;h2 id=&#34;layer-configuration&#34;&gt;Layer configuration&lt;/h2&gt;
-&lt;p&gt;Prepare a source configuration by referenceing (this document)[https://docs.mapbox.com/mapbox-gl-js/style-spec/#sources-image]&lt;/p&gt;
-&lt;!-- more --&gt;
-&lt;pre&gt;&lt;code class=&#34;language-json&#34;&gt;const Image_SOURCE_OPTIONS = {
-    &amp;quot;type&amp;quot;: &amp;quot;image&amp;quot;,
-    &amp;quot;url&amp;quot;: &amp;quot;https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif&amp;quot;,
-    &amp;quot;coordinates&amp;quot;: [
-        [-80.425, 46.437],
-        [-71.516, 46.437],
-        [-71.516, 37.936],
-        [-80.425, 37.936]
-    ] 
-};
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;For base64 image, the url could be &lt;code&gt;data:image/png;base64,&lt;/code&gt; + base64 image data:&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-json&#34;&gt;const Image_SOURCE_OPTIONS = {
-    &amp;quot;type&amp;quot;: &amp;quot;image&amp;quot;,
-    &amp;quot;url&amp;quot;: &amp;quot;data:image/png;base64,...&amp;quot;,
-    &amp;quot;coordinates&amp;quot;: [
-        [-80.425, 46.437],
-        [-71.516, 46.437],
-        [-71.516, 37.936],
-        [-80.425, 37.936]
-    ] 
-};
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h1 id=&#34;create-a-source&#34;&gt;Create a Source&lt;/h1&gt;
-&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;Source id=&amp;quot;source_id&amp;quot; tileJsonSource={RASTER_SOURCE_OPTIONS} /&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h2 id=&#34;create-a-layer&#34;&gt;Create a Layer&lt;/h2&gt;
-&lt;p&gt;Reference (react-mapbox-gl document)[https://github.com/alex3165/react-mapbox-gl/blob/master/docs/API.md#layer], the type could only be &lt;code&gt;symbol&lt;/code&gt;, &lt;code&gt;line&lt;/code&gt;, &lt;code&gt;raster&lt;/code&gt;, ...&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt; &amp;lt;Layer type=&amp;quot;raster&amp;quot; id=&amp;quot;layer_id&amp;quot; sourceId=&amp;quot;source_id&amp;quot; /&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-">Add an image layer to react mapbox gl</a>
-      </div>
-      
-      <div class="item">
         <a class="result-title" style="opacity: 0;" href="https://jevy.wang/post/2019-09-11-i-post-get-data-from-google-storage/"" data-c="
           &lt;h2 id=&#34;software&#34;&gt;Software&lt;/h2&gt;
 &lt;ul&gt;
@@ -930,7 +1335,7 @@ event[&#39;requestContext&#39;][&#39;identity&#39;][&#39;sourceIP&#39;]
 &lt;h2 id=&#34;analysis-k8s-nginx-log&#34;&gt;Analysis K8S nginx log&lt;/h2&gt;
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;find */* -type f  -exec jq &amp;quot;.textPayload&amp;quot; \{\} \; | goaccess --log-format=&#39;%^ %^ [%h] %^ %^ [%d:%t %^] \&amp;quot;%r\&amp;quot; %^ %b \&amp;quot;%R\&amp;quot; \&amp;quot;%u\&amp;quot; %^ %^ [%v] %^:%^ %^ %T %^ %^&#39; --date-format=%d/%b/%Y --time-format=%H:%M:%S - --with-output-resolver -o out.html
 &lt;/code&gt;&lt;/pre&gt;
-">IP Camera BAT 310 Hacking</a>
+">GoAccess process K8S web log</a>
       </div>
       
       <div class="item">

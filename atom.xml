@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://jevy.wang</id>
     <title>Jevy Wang&apos;s Blog</title>
-    <updated>2021-03-06T12:45:34.742Z</updated>
+    <updated>2021-03-07T23:54:17.888Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://jevy.wang"/>
     <link rel="self" href="https://jevy.wang/atom.xml"/>
@@ -11,11 +11,428 @@
     <icon>https://jevy.wang/favicon.ico</icon>
     <rights>All rights reserved 2021, Jevy Wang&apos;s Blog</rights>
     <entry>
+        <title type="html"><![CDATA[Dockerize conda]]></title>
+        <id>https://jevy.wang/post/2021-02-23-i-post-dockerize-conda/</id>
+        <link href="https://jevy.wang/post/2021-02-23-i-post-dockerize-conda/">
+        </link>
+        <updated>2021-02-22T22:00:00.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="wrap-conda-into-docker">Wrap conda into docker</h1>
+<h2 id="prepare-envyml-file">prepare env.yml file</h2>
+<pre><code class="language-json">name: test
+channels:
+  - conda-forge
+dependencies:
+  - flask
+</code></pre>
+<h2 id="prepare-dockerfile">prepare Dockerfile</h2>
+<pre><code>FROM continuumio/miniconda3
+
+WORKDIR /conda
+
+# Create conda env using env.yml:
+COPY env.yml .
+RUN conda env create -f env.yml
+
+# Should activate the conda env test here, but execute conda activate test will throw an error:  conda init is required
+
+# This code does not help too
+# RUN source ~/minikube/etc/profile.d/conda.sh
+# RUN conda activate test
+
+# That is because every new step of docker build, a new shell will be startup. 
+# The new shell would not know where is conda
+
+# This would also cause problem when executing the docker as another new shell will be created
+
+COPY . .
+
+# Here is the solution 
+ENTRYPOINT [&quot;conda&quot;, &quot;run&quot;, &quot;--no-capture-output&quot;, &quot;-n&quot;, &quot;test&quot;, &quot;python&quot;, &quot;other_code.py&quot;]
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Panel serve to public]]></title>
+        <id>https://jevy.wang/post/2021-02-23-i-post-panel-serve-to-public/</id>
+        <link href="https://jevy.wang/post/2021-02-23-i-post-panel-serve-to-public/">
+        </link>
+        <updated>2021-02-22T22:00:00.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="panel-serve-options">panel serve options</h1>
+<pre><code class="language-python"># The pn.serve accepts a number of arguments: [source](https://docs.bokeh.org/en/latest/docs/reference/server/server.html#bokeh.server.server.Server)
+
+class Serve(Subcommand):
+    ''' Subcommand to launch the Bokeh server.
+    '''
+
+    #: name for this subcommand
+    name = &quot;serve&quot;
+
+    help = &quot;Run a Bokeh server hosting one or more applications&quot;
+
+    args = base_serve_args + (
+        ('files', dict(
+            metavar = 'DIRECTORY-OR-SCRIPT',
+            nargs   = '*',
+            help    = &quot;The app directories or scripts to serve (serve empty document if not specified)&quot;,
+            default = None,
+        )),
+
+        ('--args', dict(
+            metavar = 'COMMAND-LINE-ARGS',
+            nargs   = argparse.REMAINDER,
+            help    = &quot;Command line arguments remaining to passed on to the application handler. &quot;
+                      &quot;NOTE: if this argument precedes DIRECTORY-OR-SCRIPT then some other argument, e.g. &quot;
+                      &quot;--show, must be placed before the directory or script. &quot;,
+        )),
+
+        ('--dev', dict(
+            metavar ='FILES-TO-WATCH',
+            action  ='store',
+            default = None,
+            type    = str,
+            nargs   = '*',
+            help    = &quot;Enable live reloading during app development. &quot;
+                      &quot;By default it watches all *.py *.html *.css *.yaml files &quot;
+                      &quot;in the app directory tree. Additional files can be passed &quot;
+                      &quot;as arguments. &quot;
+                      &quot;NOTE: if this argument precedes DIRECTORY-OR-SCRIPT then some other argument, e.g &quot;
+                      &quot;--show, must be placed before the directory or script. &quot;
+                      &quot;NOTE: This setting only works with a single app. &quot;
+                      &quot;It also restricts the number of processes to 1. &quot;
+                      &quot;NOTE FOR WINDOWS USERS : this option must be invoked using &quot;
+                      &quot;'python -m bokeh'. If not Tornado will fail to restart the &quot;
+                      &quot;server&quot;,
+        )),
+
+        ('--show', dict(
+            action = 'store_true',
+            help   = &quot;Open server app(s) in a browser&quot;,
+        )),
+
+        ('--allow-websocket-origin', dict(
+            metavar = 'HOST[:PORT]',
+            action  = 'append',
+            type    = str,
+            help    = &quot;Public hostnames which may connect to the Bokeh websocket&quot;,
+        )),
+
+        ('--prefix', dict(
+            metavar = 'PREFIX',
+            type    = str,
+            help    = &quot;URL prefix for Bokeh server URLs&quot;,
+            default = None,
+        )),
+
+        ('--keep-alive', dict(
+            metavar = 'MILLISECONDS',
+            type    = int,
+            help    = &quot;How often to send a keep-alive ping to clients, 0 to disable.&quot;,
+            default = None,
+        )),
+
+        ('--check-unused-sessions', dict(
+            metavar = 'MILLISECONDS',
+            type    = int,
+            help    = &quot;How often to check for unused sessions&quot;,
+            default = None,
+        )),
+
+        ('--unused-session-lifetime', dict(
+            metavar = 'MILLISECONDS',
+            type    = int,
+            help    = &quot;How long unused sessions last&quot;,
+            default = None,
+        )),
+
+        ('--stats-log-frequency', dict(
+            metavar = 'MILLISECONDS',
+            type    = int,
+            help    = &quot;How often to log stats&quot;,
+            default = None,
+        )),
+
+        ('--mem-log-frequency', dict(
+            metavar = 'MILLISECONDS',
+            type    = int,
+            help    = &quot;How often to log memory usage information&quot;,
+            default = None,
+        )),
+
+        ('--use-xheaders', dict(
+            action = 'store_true',
+            help   = &quot;Prefer X-headers for IP/protocol information&quot;,
+        )),
+
+        ('--ssl-certfile', dict(
+            metavar = 'CERTFILE',
+            action  = 'store',
+            default = None,
+            help    = 'Absolute path to a certificate file for SSL termination',
+        )),
+
+        ('--ssl-keyfile', dict(
+            metavar = 'KEYFILE',
+            action  = 'store',
+            default = None,
+            help    = 'Absolute path to a private key file for SSL termination',
+        )),
+
+        ('--session-ids', dict(
+            metavar = 'MODE',
+            action  = 'store',
+            default = None,
+            choices = SESSION_ID_MODES,
+            help    = &quot;One of: %s&quot; % nice_join(SESSION_ID_MODES),
+        )),
+
+        ('--auth-module', dict(
+            metavar = 'AUTH_MODULE',
+            action  = 'store',
+            default = None,
+            help    = 'Absolute path to a Python module that implements auth hooks',
+        )),
+
+        ('--enable-xsrf-cookies', dict(
+            action  = 'store_true',
+            default = False,
+            help    = 'Whether to enable Tornado support for XSRF cookies. All '
+                      'PUT, POST, or DELETE handlers must be properly instrumented '
+                      'when this setting is enabled.'
+        )),
+
+        ('--exclude-headers', dict(
+            action  = 'store',
+            default = None,
+            nargs='+',
+            help    = 'A list of request headers to exclude from the session '
+                      'context (by default all headers are included).'
+        )),
+
+        ('--exclude-cookies', dict(
+            action  = 'store',
+            default = None,
+            nargs='+',
+            help    = 'A list of request cookies to exclude from the session '
+                      'context (by default all cookies are included).'
+        )),
+
+        ('--include-headers', dict(
+            action  = 'store',
+            default = None,
+            nargs='+',
+            help    = 'A list of request headers to make available in the session '
+                      'context (by default all headers are included).'
+        )),
+
+        ('--include-cookies', dict(
+            action  = 'store',
+            default = None,
+            nargs='+',
+            help    = 'A list of request cookies to make available in the session '
+                      'context (by default all cookies are included).'
+        )),
+
+        ('--cookie-secret', dict(
+            metavar = 'COOKIE_SECRET',
+            action  = 'store',
+            default = None,
+            help    = 'Configure to enable getting/setting secure cookies',
+        )),
+
+        ('--index', dict(
+            metavar = 'INDEX',
+            action  = 'store',
+            default = None,
+            help    = 'Path to a template to use for the site index',
+        )),
+
+        ('--disable-index', dict(
+            action = 'store_true',
+            help   = 'Do not use the default index on the root path',
+        )),
+
+        ('--disable-index-redirect', dict(
+            action = 'store_true',
+            help   = 'Do not redirect to running app from root path',
+        )),
+
+        ('--num-procs', dict(
+            metavar = 'N',
+            action  = 'store',
+            help    = &quot;Number of worker processes for an app. Using &quot;
+                      &quot;0 will autodetect number of cores (defaults to 1)&quot;,
+            default = 1,
+            type    = int,
+        )),
+
+        ('--session-token-expiration', dict(
+            metavar = 'N',
+            action  = 'store',
+            help    = &quot;Duration in seconds that a new session token &quot;
+                      &quot;is valid for session creation. After the expiry &quot;
+                      &quot;time has elapsed, the token will not be able &quot;
+                      &quot;create a new session (defaults to  seconds).&quot;,
+            default = DEFAULT_SESSION_TOKEN_EXPIRATION,
+            type    = int,
+        )),
+
+        ('--websocket-max-message-size', dict(
+            metavar = 'BYTES',
+            action  = 'store',
+            help    = &quot;Set the Tornado websocket_max_message_size value &quot;
+                      &quot;(default: 20MB)&quot;,
+            default = DEFAULT_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES,
+            type    = int,
+        )),
+
+        ('--websocket-compression-level', dict(
+            metavar = 'LEVEL',
+            action  = 'store',
+            help    = &quot;Set the Tornado WebSocket compression_level&quot;,
+            default = None,
+            type    = int,
+        )),
+
+        ('--websocket-compression-mem-level', dict(
+            metavar = 'LEVEL',
+            action  = 'store',
+            help    = &quot;Set the Tornado WebSocket compression mem_level&quot;,
+            default = None,
+            type    = int,
+        )),
+
+        ('--glob', dict(
+            action='store_true',
+            help='Process all filename arguments as globs',
+        )),
+    )
+</code></pre>
+<h2 id="address-serve-as-public-ip-address">address - serve as public ip address</h2>
+<p>setting the address=public ip, bokeh server will listen on this ip address. bokeh client could get the js script includes this public ip, which will be used for further bokeh js download and socket setup</p>
+<h2 id="-allow-websocket-origin">--allow-websocket-origin</h2>
+<p>The origin URLs can access the bokeh server. 403 will be returned for unlisted URLs.<br>
+&quot;*&quot; can be set to allow any origin.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Panel serve]]></title>
+        <id>https://jevy.wang/post/2021-02-23-i-post-panel-serve/</id>
+        <link href="https://jevy.wang/post/2021-02-23-i-post-panel-serve/">
+        </link>
+        <updated>2021-02-22T22:00:00.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="relationship-between-panel-holoviews-and-bokeh">Relationship between panel, holoviews, and bokeh</h1>
+<p>The HoloViews pane renders HoloViews plots with one of the plotting backends supported by HoloViews. It supports the regular HoloViews widgets for exploring the key dimensions of a HoloMap or DynamicMap, but is more flexible than the native HoloViews widgets since it also allows customizing widget types and their position relative to the plot. <a href="https://panel.holoviz.org/reference/panes/HoloViews.html">source</a></p>
+<p>HoloViews supports backends: 'bokeh', 'matplotlib', or 'plotly'</p>
+<h1 id="serve-panel">Serve panel</h1>
+<h2 id="two-ways-of-serving-panel">Two ways of serving panel</h2>
+<h3 id="servable-and-panel-serve-pyipynb">.servable() and panel serve **.py/ipynb</h3>
+<p>Any .py or .ipynb file that attaches a plot to Bokeh's curdoc can be deployed using panel serve. The easiest way to do this is using wrapping the HoloViews component in Panel using pn.panel(hvobj) and then calling the panel_obj.servable() method, which accepts any HoloViews object ensures that the plot is discoverable by Panel and the underlying Bokeh server. <a href="http://holoviews.org/user_guide/Deploying_Bokeh_Apps.html">source</a></p>
+<pre><code class="language-bash"># Serve .py or .ipynb file
+panel serve --allow-websocket-origin=localhost:3000 --address=localhost --port=5006 **.py
+</code></pre>
+<pre><code class="language-python"># Serve .py or .ipynb file within Flask using Threading in different ports
+def services():
+    thread_pool = []
+    # json_files is a json configration, which includes multiple config sections
+    for json_file in json_files:
+        comm = f'panel serve --allow-websocket-origin=localhost:3000 --address=localhost --port={str(json_file[&quot;file_port&quot;])}{json_file[&quot;file_path&quot;]}'
+        thread_pool.append(comm)
+    return thread_pool
+
+# Run threads
+for comm in services():
+    Thread(target=os.system, args=(comm,)).start() 
+</code></pre>
+<h3 id="pnserve">pn.serve()</h3>
+<p>When using pn.serve all sessions will share the same state, and may cause a problem that a client's activity may affect other clients. Therefore it is best to wrap the creation of the app in a function which we can then provide to pn.serve. For example:</p>
+<pre><code class="language-python">xarray_dataset =  xr.open_dataset(&quot;**.nc&quot;)
+
+def plot(xarray_dataset):
+    image = ds_grouped_ndvi.hvplot('x', 'y').opts(cmap='RdYlGn')
+    stream = hv.streams.Tap(source=image, x=104, y=10)
+    @pn.depends(stream.param.x, stream.param.y)
+    def timeseries(x, y):
+        return xarray_dataset.sel(x=x, y=y, method='nearest').hvplot('time')
+    return pn.Column(image, timeseries)
+
+# This would cause sharing state issue
+pn.serve(plot(xarray_dataset))
+
+def serve_func():
+    return plot(xarray_dataset)
+# Because serving a function, every call will create a new function, and further new panel layout
+pn.serve(result_func)
+</code></pre>
+<h1 id="access-panel-service-in-url">Access panel service in URL</h1>
+<h2 id="pull_session-and-server_session">pull_session() and server_session()</h2>
+<pre><code class="language-python">from bokeh.client import pull_session
+from bokeh.embed import server_session
+</code></pre>
+<blockquote>
+<p>pull_session() method at bokeh.client.session will not work for large socket message size. A config will exposed at bokeh 2.3.</p>
+</blockquote>
+<pre><code class="language-python"># FastAPI example
+@app.get(&quot;/test&quot;)
+def getViewByName(request: Request, ):
+    url = 'http://localhost:5006'
+    with pull_session(url=url) as session:
+        script = server_session(session_id=session.id, url=url)
+    return templates.TemplateResponse('embed_div.html', context={'request': request, 'script': script})
+
+</code></pre>
+<h2 id="server_document">server_document()</h2>
+<pre><code class="language-python">from bokeh.embed import server_document
+</code></pre>
+<pre><code class="language-python"># FastAPI example
+@app.get(&quot;/test4&quot;)
+def getViewByName(request: Request, ):
+    url = 'http://localhost:5008'
+    script = server_document(url)
+    return templates.TemplateResponse('embed_div.html', context={'request': request, 'script': script})
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Tips of using Azure]]></title>
+        <id>https://jevy.wang/post/2021-02-23-i-post-tips-using-azure/</id>
+        <link href="https://jevy.wang/post/2021-02-23-i-post-tips-using-azure/">
+        </link>
+        <updated>2021-02-22T22:00:00.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="monitoring-config">Monitoring Config</h1>
+<p>Azure Application insight has sampling feature (default enable) that will randomly ignore some of logs when it exceeds a specified threshold (unknown the threshold).<br>
+The Azure function monitoring tracking could tell you the failure or success by inspecting the log. The sampling feature would cause the problem of not telling you the result of function execution. <a href="https://docs.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#configure-sampling">source</a><br>
+Adding following config at Azure function host.json to disable it:</p>
+<pre><code class="language-json">{
+  &quot;logging&quot;: {
+    &quot;applicationInsights&quot;: {
+      &quot;samplingSettings&quot;: {
+        &quot;isEnabled&quot;: false,
+        &quot;maxTelemetryItemsPerSecond&quot; : 20,
+        &quot;excludedTypes&quot;: &quot;Request;Exception&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h1 id="azure-function">Azure Function</h1>
+<h2 id="shared">Shared</h2>
+<p>Because many functions (may not only yours) share computing resources, there are some limitations:</p>
+<ul>
+<li>Multiple functions within a Azure function application may clash</li>
+<li>There are many Azure defined limitations such as Threads, processes, connections, sockets, etc. <a href="https://github.com/projectkudu/kudu/wiki/Azure-Web-App-sandbox#app-service-plans-and-sandbox-limits">source</a></li>
+</ul>
+<h2 id="webapp">webapp</h2>
+<ul>
+<li>So far so good, need pay higher fees. Didn't see values comparing with VMs.</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
         <title type="html"><![CDATA[Package AWS Lambda function]]></title>
         <id>https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/</id>
         <link href="https://jevy.wang/post/2019-02-28-i-post-package-aws-lambda/">
         </link>
-        <updated>2021-03-06T15:40:14.000Z</updated>
+        <updated>2020-03-17T21:40:14.000Z</updated>
         <summary type="html"><![CDATA[<ul>
 <li>Install/start Docker</li>
 <li>Install python3</li>
@@ -90,7 +507,7 @@ serverless deploy
         <id>https://jevy.wang/post/2020-02-28-i-post-ip-camera-hacking/</id>
         <link href="https://jevy.wang/post/2020-02-28-i-post-ip-camera-hacking/">
         </link>
-        <updated>2020-02-27T22:00:00.000Z</updated>
+        <updated>2020-02-28T01:00:00.000Z</updated>
         <summary type="html"><![CDATA[<p>Got a Solar WiFi IP camera from <a href="https://www.ebay.com.au/itm/302918525683?ul_noapp=true">Wireless Solar IP67 Security Camera System Outdoor Home Cam 1080P 2MP</a><br>
 Wondering to control this camera using script/program.</p>
 ]]></summary>
@@ -118,7 +535,7 @@ s.sendto(bytes(packet), dest)
         <id>https://jevy.wang/post/2020-02-04-i-post-translate-idl-to-python/</id>
         <link href="https://jevy.wang/post/2020-02-04-i-post-translate-idl-to-python/">
         </link>
-        <updated>2020-02-03T19:00:00.000Z</updated>
+        <updated>2020-02-03T22:00:00.000Z</updated>
         <summary type="html"><![CDATA[<h2 id="idl-programming-language">IDL programming language</h2>
 <p>IDL, short for Interactive Data Language, is a programming language used for data analysis. It is popular in particular areas of science, such as astronomy, atmospheric physics and medical imaging. (https://en.wikipedia.org/wiki/IDL_(programming_language))</p>
 ]]></summary>
@@ -158,7 +575,7 @@ array([0., 0.]) # -&gt; two elements
         <id>https://jevy.wang/post/2019-12-13-i-post-create-api-on-aws-lambda/</id>
         <link href="https://jevy.wang/post/2019-12-13-i-post-create-api-on-aws-lambda/">
         </link>
-        <updated>2019-12-12T19:00:00.000Z</updated>
+        <updated>2019-12-12T22:00:00.000Z</updated>
         <summary type="html"><![CDATA[<h2 id="lambda-script">Lambda script</h2>
 <p>Lambda could collect POST boday and url params using <code>event</code> . For POST body, params could be extracted directly like <code>event['param1']</code>.<br>
 As of September 2017, you no longer have to configure mappings to access the request body.<br>
@@ -191,7 +608,7 @@ event['requestContext']['identity']['sourceIP']
         <id>https://jevy.wang/post/2019-12-10-i-post-add-image-layer-to-react-mapbox-gl/</id>
         <link href="https://jevy.wang/post/2019-12-10-i-post-add-image-layer-to-react-mapbox-gl/">
         </link>
-        <updated>2019-12-09T19:00:00.000Z</updated>
+        <updated>2019-12-09T22:00:00.000Z</updated>
         <summary type="html"><![CDATA[<p>Images could be added to mapbox using a <code>Layer</code> and <code>Source</code>.</p>
 <h2 id="layer-configuration">Layer configuration</h2>
 <p>Prepare a source configuration by referenceing (this document)[https://docs.mapbox.com/mapbox-gl-js/style-spec/#sources-image]</p>
@@ -233,57 +650,11 @@ event['requestContext']['identity']['sourceIP']
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[Add an image layer to react mapbox gl]]></title>
-        <id>https://jevy.wang/post/2019-09-11-i-post-add-image-layer-to-react-mapbox-gl/</id>
-        <link href="https://jevy.wang/post/2019-09-11-i-post-add-image-layer-to-react-mapbox-gl/">
-        </link>
-        <updated>2019-09-10T18:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>Images could be added to mapbox using a <code>Layer</code> and a <code>Source</code> component.</p>
-<h2 id="layer-configuration">Layer configuration</h2>
-<p>Prepare a source configuration by referenceing (this document)[https://docs.mapbox.com/mapbox-gl-js/style-spec/#sources-image]</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>Images could be added to mapbox using a <code>Layer</code> and a <code>Source</code> component.</p>
-<h2 id="layer-configuration">Layer configuration</h2>
-<p>Prepare a source configuration by referenceing (this document)[https://docs.mapbox.com/mapbox-gl-js/style-spec/#sources-image]</p>
-<!-- more -->
-<pre><code class="language-json">const Image_SOURCE_OPTIONS = {
-    &quot;type&quot;: &quot;image&quot;,
-    &quot;url&quot;: &quot;https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif&quot;,
-    &quot;coordinates&quot;: [
-        [-80.425, 46.437],
-        [-71.516, 46.437],
-        [-71.516, 37.936],
-        [-80.425, 37.936]
-    ] 
-};
-</code></pre>
-<p>For base64 image, the url could be <code>data:image/png;base64,</code> + base64 image data:</p>
-<pre><code class="language-json">const Image_SOURCE_OPTIONS = {
-    &quot;type&quot;: &quot;image&quot;,
-    &quot;url&quot;: &quot;data:image/png;base64,...&quot;,
-    &quot;coordinates&quot;: [
-        [-80.425, 46.437],
-        [-71.516, 46.437],
-        [-71.516, 37.936],
-        [-80.425, 37.936]
-    ] 
-};
-</code></pre>
-<h1 id="create-a-source">Create a Source</h1>
-<pre><code class="language-html">&lt;Source id=&quot;source_id&quot; tileJsonSource={RASTER_SOURCE_OPTIONS} /&gt;
-</code></pre>
-<h2 id="create-a-layer">Create a Layer</h2>
-<p>Reference (react-mapbox-gl document)[https://github.com/alex3165/react-mapbox-gl/blob/master/docs/API.md#layer], the type could only be <code>symbol</code>, <code>line</code>, <code>raster</code>, ...</p>
-<pre><code class="language-html"> &lt;Layer type=&quot;raster&quot; id=&quot;layer_id&quot; sourceId=&quot;source_id&quot; /&gt;
-</code></pre>
-]]></content>
-    </entry>
-    <entry>
         <title type="html"><![CDATA[Copy data using google cloud gsutil]]></title>
         <id>https://jevy.wang/post/2019-09-11-i-post-get-data-from-google-storage/</id>
         <link href="https://jevy.wang/post/2019-09-11-i-post-get-data-from-google-storage/">
         </link>
-        <updated>2019-09-10T18:00:00.000Z</updated>
+        <updated>2019-09-10T20:00:00.000Z</updated>
         <summary type="html"><![CDATA[<h2 id="software">Software</h2>
 <ul>
 <li>Install gcloud with gsutil included</li>
@@ -312,112 +683,6 @@ event['requestContext']['identity']['sourceIP']
 <li>rsync local data from bucket</li>
 </ul>
 <pre><code class="language-bash">gsutil -m rsync -d -r gs://mybucket/data  ./data
-</code></pre>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[IP Camera BAT 310 Hacking]]></title>
-        <id>https://jevy.wang/post/2019-09-11-i-post-goaccess-analysis-k8s-nginx-log/</id>
-        <link href="https://jevy.wang/post/2019-09-11-i-post-goaccess-analysis-k8s-nginx-log/">
-        </link>
-        <updated>2019-09-10T18:00:00.000Z</updated>
-        <content type="html"><![CDATA[<h2 id="software">Software</h2>
-<ul>
-<li>use this document to update goaccess to the latest version: https://goaccess.io/download</li>
-<li>use this document to find the suitable log format: https://github.com/allinurl/goaccess/blob/master/config/goaccess.conf</li>
-<li>install jq linux tool</li>
-<li></li>
-</ul>
-<h2 id="analysis-k8s-nginx-log">Analysis K8S nginx log</h2>
-<pre><code class="language-bash">find */* -type f  -exec jq &quot;.textPayload&quot; \{\} \; | goaccess --log-format='%^ %^ [%h] %^ %^ [%d:%t %^] \&quot;%r\&quot; %^ %b \&quot;%R\&quot; \&quot;%u\&quot; %^ %^ [%v] %^:%^ %^ %T %^ %^' --date-format=%d/%b/%Y --time-format=%H:%M:%S - --with-output-resolver -o out.html
-</code></pre>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Install owncloud with docker and local directory]]></title>
-        <id>https://jevy.wang/post/2019-06-07-install-owncloud-with-docker-and-local-directory/</id>
-        <link href="https://jevy.wang/post/2019-06-07-install-owncloud-with-docker-and-local-directory/">
-        </link>
-        <updated>2019-06-07T12:40:14.000Z</updated>
-        <content type="html"><![CDATA[<p>I was struggled on installing owncloud barely on ubuntu 18, and spent hours on install and config its dependencies, but failed on database script execution.</p>
-<p>During googling to solve my problem, I noticed a dockerized owncloud, and find it's pretty easy to setup.</p>
-<p>Here is the installation/configuration log:</p>
-<p><strong>Install docker and docker-compose</strong></p>
-<ul>
-<li><a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">docker</a></li>
-<li><a href="https://docs.docker.com/compose/install/">docker-compose</a></li>
-</ul>
-<p><strong>Prepare a docker-compose.yml</strong> :</p>
-<p>Referenced  this <a href="https://doc.owncloud.com/server/admin_manual/installation/docker/">Installing with Docker</a><br>
-and this <a href="https://raw.githubusercontent.com/owncloud-docker/server/master/docker-compose.yml">yml file</a> to make my own docker-compose.yml file.</p>
-<p>Because I have a RDS instance on cloud, and a NAS storage mounted on this server, I was wondering to reuse them. So I removed the volumns and db dependencies from the yml file.<br>
-Becuase this owncloud file sharing will be used by very few users, and the VM will have extra charge for CPU usage, I removed redis.</p>
-<pre><code class="language-yml">version: '2.1'
-
-services:
-  owncloud:
-    image: owncloud/server:10.0
-    restart: always
-    ports:
-      - 8080:8080
-    environment:
-      - OWNCLOUD_DOMAIN=localhost
-      - OWNCLOUD_DB_TYPE=mysql
-      - OWNCLOUD_DB_NAME=db_name
-      - OWNCLOUD_DB_USERNAME=db_username
-      - OWNCLOUD_DB_PASSWORD=db_password
-      # db can be any remote url with accessing privilidge
-      - OWNCLOUD_DB_HOST=db_url
-      - OWNCLOUD_ADMIN_USERNAME=admin
-      - OWNCLOUD_ADMIN_PASSWORD=admin
-      # for owncloud &gt;= 9.0, add this config to allow local directory as external storage
-      - OWNCLOUD_ALLOW_EXTERNAL_LOCAL_STORAGE=true
-    healthcheck:
-      test: [&quot;CMD&quot;, &quot;/usr/bin/healthcheck&quot;]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    volumes:
-      - /mnt/data/owncloud:/mnt/data
-      - /other-directory1:/mnt/data/d1
-      - /other-directory2:/mnt/data/d2
-
-</code></pre>
-<p>Use command <code>sudo docker-compose up -d</code> to start owncloud, and access it through <code>server_ip:8080</code>.<br>
-Please add port <code>8080</code> to your VM's network route rule.</p>
-<p><strong>Add local storage</strong> :</p>
-<p>Reference this <a href="https://doc.owncloud.com/server/admin_manual/configuration/files/external_storage/local.html">Local storage</a> to add local directory.</p>
-<p><strong>usefull notes</strong></p>
-<ul>
-<li>scan files copied to owncloud directory: <code>docker-compose exec owncloud occ files:scan --all</code></li>
-</ul>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Read H264 livestream using ffmpeg and cv2]]></title>
-        <id>https://jevy.wang/post/2019-02-28-i-post-read-h264-livestream/</id>
-        <link href="https://jevy.wang/post/2019-02-28-i-post-read-h264-livestream/">
-        </link>
-        <updated>2019-02-27T19:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>Got a Solar WiFi IP camera from <a href="https://www.ebay.com.au/itm/302918525683?ul_noapp=true">Wireless Solar IP67 Security Camera System Outdoor Home Cam 1080P 2MP</a></p>
-<p>Wondering to capture video or images from the camera using script/program.</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>Got a Solar WiFi IP camera from <a href="https://www.ebay.com.au/itm/302918525683?ul_noapp=true">Wireless Solar IP67 Security Camera System Outdoor Home Cam 1080P 2MP</a></p>
-<p>Wondering to capture video or images from the camera using script/program.</p>
-<!-- more -->
-<p><code>ffmpeg -re -i &quot;http://host ip:81/livestream.cgi?user=admin&amp;pwd=&amp;streamid=0&quot; -c copy -f mpegts test.mp4</code></p>
-<p><code>ffmpeg -i &quot;http://host ip:81/livestream.cgi?user=admin&amp;pwd=a123&amp;streamid=0&quot; -c copy -f mpegts -ss 5 -frames:v 5 testt.png</code></p>
-<p>FFMPEG is not portable, another way of using cv2 to capture a picture:<br>
-(ref <a href="https://stackoverflow.com/questions/28477600/not-able-to-play-h264-video-on-opencv">Not able to play .h264 video on OpenCV?</a>)</p>
-<pre><code class="language-python">cap = cv2.VideoCapture('http://host:81/livestream.cgi?user=admin&amp;pwd=&amp;streamid=0')
-        while(cap.isOpened()):
-            ret, frame = cap.read()
-            # write to local file
-            cv2.imwrite(&quot;capture.png&quot;,frame)
-            # create memory file object save to AWS S3
-            #img_data = io.BytesIO(cv2.imencode('.png', frame)[1])
-            break
-        cap.release()
 </code></pre>
 ]]></content>
     </entry>
