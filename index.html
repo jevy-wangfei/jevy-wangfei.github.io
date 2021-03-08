@@ -5,11 +5,11 @@
   <meta charset="UTF-8" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="keywords" content="Jevy Wang blog">
+<meta name="keywords" content="Jevy Wang&#39;s  blog">
 <meta name="description" content="Notes ">
 <meta name="theme-color" content="#0b7285">
 <title>Jevy Wang&#39;s Blog</title>
-<link rel="shortcut icon" href="/favicon.ico?v=1615161237180">
+<link rel="shortcut icon" href="/favicon.ico?v=1615161774546">
 <link rel="stylesheet" href="/media/css/pisces.css">
 <link rel="stylesheet" href="/media/fonts/font-awesome.css">
 <link
@@ -81,8 +81,6 @@
           
             
             
-              
-            
             <li class="nav-item ">
               
               
@@ -93,8 +91,6 @@
             </li>
           
             
-            
-              
             
             <li class="nav-item ">
               
@@ -107,8 +103,6 @@
           
             
             
-              
-            
             <li class="nav-item ">
               
               
@@ -120,8 +114,6 @@
           
             
             
-              
-            
             <li class="nav-item ">
               
               
@@ -131,16 +123,6 @@
               
             </li>
           
-          
-            
-              <li class="nav-item ">
-                <a href="/friends/" target="_self">
-                  
-                    <i class="fa fa-address-book"></i> 友情链接
-                  
-                </a>
-              </li>
-            
           
           
             <li id="fa_search" class="nav-item">
@@ -187,7 +169,7 @@
 <div class="sidebar-wrapper box-shadow-wrapper bg-color">
   <div class="sidebar-item">
     <img class="site-author-image right-motion" src="/images/avatar.png"/>
-    <p class="site-author-name">Technical Notes and Blogs</p>
+    <p class="site-author-name">Jevy Wang&#39;s Technical Notes and Blogs</p>
     
   </div>
   <div class="sidebar-item side-item-stat right-motion">
@@ -227,6 +209,8 @@
         
       </div>
     </div>
+  
+
   
 
 
@@ -311,10 +295,25 @@
               
               
             
+              
+              
+              
+            
+              
+              
+              
+            
+              
+              
+              
+            
             
               <p><h1 id="wrap-conda-into-docker">Wrap conda into docker</h1>
 <h2 id="prepare-envyml-file">prepare env.yml file</h2>
 <pre><code class="language-json">name: test
+channels:
+  - conda-forge
+dependencies:
 
                 
                   <!-- 自动摘要出来的内容有<code则补上结尾,防止格式错误 -->
@@ -401,10 +400,25 @@
               
               
             
+              
+              
+              
+            
+              
+              
+              
+            
+              
+              
+              
+            
             
               <p><h1 id="panel-serve-options">panel serve options</h1>
 <pre><code class="language-python"># The pn.serve accepts a number of arguments: [source](https://docs.bokeh.org/en/latest/docs/reference/server/server.html#bokeh.server.server.Server)
 
+class Serve(Subcommand):
+    ''' Subcommand to launch the Bokeh server.
+    '''
 
                 
                   <!-- 自动摘要出来的内容有<code则补上结尾,防止格式错误 -->
@@ -491,10 +505,25 @@
               
               
             
+              
+              
+              
+            
+              
+              
+              
+            
+              
+              
+              
+            
             
               <p><h1 id="relationship-between-panel-holoviews-and-bokeh">Relationship between panel, holoviews, and bokeh</h1>
 <p>The HoloViews pane renders HoloViews plots with one of the plotting backends supported by HoloViews. It supports the regular HoloViews widgets for exploring the key dimensions of a HoloMap or DynamicMap, but is more flexible than the native HoloViews widgets since it also allows customizing widget types and their position relative to the plot. <a href="https://panel.holoviz.org/reference/panes/HoloViews.html">source</a></p>
 <p>HoloViews supports backends: 'bokeh', 'matplotlib', or 'plotly'</p>
+<h1 id="serve-panel">Serve panel</h1>
+<h2 id="two-ways-of-serving-panel">Two ways of serving panel</h2>
+<h3 id="servable-and-panel-serve-pyipynb">.servable() and panel serve **.py/ipynb</h3>
 
                 
               <p>
@@ -578,11 +607,29 @@
               
               
             
+              
+              
+              
+            
+              
+              
+              
+            
+              
+              
+              
+            
             
               <p><h1 id="monitoring-config">Monitoring Config</h1>
 <p>Azure Application insight has sampling feature (default enable) that will randomly ignore some of logs when it exceeds a specified threshold (unknown the threshold).<br>
 The Azure function monitoring tracking could tell you the failure or success by inspecting the log. The sampling feature would cause the problem of not telling you the result of function execution. <a href="https://docs.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#configure-sampling">source</a><br>
+Adding following config at Azure function host.json to disable it:</p>
+<pre><code class="language-json">{
+  &quot;logging&quot;: {
 
+                
+                  <!-- 自动摘要出来的内容有<code则补上结尾,防止格式错误 -->
+                  </code></pre>
                 
               <p>
             
