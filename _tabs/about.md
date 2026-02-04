@@ -6,9 +6,8 @@ order: 4
 
 # Fei Wang (NV1)
 
-**Full Stack Software Expert | AI/ML Solutions Architect**
+ Full stack software developer | AI application developer 
 
-- **Mobile:** +61 452 542 687
 - **Email:** [jevy.wangfei@gmail.com](mailto:jevy.wangfei@gmail.com)
 - **GitHub:** [github.com/jevy-wangfei](https://github.com/jevy-wangfei)
 - **LinkedIn:** [linkedin.com/in/jevywang](https://au.linkedin.com/in/jevywang)
