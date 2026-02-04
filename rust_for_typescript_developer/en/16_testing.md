@@ -1,0 +1,225 @@
+In JavaScript/TypeScript, testing is a whole ecosystem: Jest/Vitest/Mocha as runners, Chai/Expect for assertions, Istanbul for coverage, maybe ts-jest for transpilation. Configuring `jest.config.js` can be a nightmare.
+
+In Rust, **testing is a first-class citizen**. The test toolchain is built into the language and compiler (`rustc`) and the package manager (`cargo`). You don’t need any extra crates to write solid unit and integration tests.
+
+---
+
+# Built-in confidence: testing in Rust
+
+## 1. From Jest to `#[test]`
+
+In TS, a test is usually a function call (`it(...)` or `test(...)`). In Rust, a test is a **normal function** marked with an **attribute** `#[test]`.
+
+### 1.1 Basic structure
+
+**TypeScript (Jest):**
+
+```typescript
+// math.test.ts
+test("adds two numbers", () => {
+  expect(2 + 2).toBe(4);
+});
+```
+
+**Rust:**
+
+```rust
+// Normal function; only compiled and run when you execute `cargo test`
+#[test]
+fn it_works() {
+    let result = 2 + 2;
+    assert_eq!(result, 4);
+}
+
+```
+
+### 1.2 Assertion macros
+
+Rust doesn’t have chained assertions like `expect(x).not.toEqual(y)`; it has a small set of macros.
+
+| Concept | TypeScript (Jest) | Rust | Note |
+| -------------- | --------------------------------- | ------------------------------ | ---------------------------------------- |
+| **Truth** | `expect(x).toBeTruthy()` | `assert!(x)` | Boolean; false → panic |
+| **Equal** | `expect(x).toBe(y)` | `assert_eq!(x, y)` | Types must implement `PartialEq` and `Debug` |
+| **Not equal** | `expect(x).not.toBe(y)` | `assert_ne!(x, y)` | Same as above |
+| **Custom message** | `expect(x).toBe(y, "Custom Msg")` | `assert!(x, "Error: {}", val)` | All assertion macros support a format string as an extra argument |
+
+**Note:** `assert_eq!` prints both sides on failure, which is why it requires `Debug`. Most built-in types implement it; for your own structs use `#[derive(Debug)]`.
+
+### 1.3 Failure = panic
+
+In TS, a failing test throws. In Rust, a failing test **panics**. `assert!` (and the others) panic when the condition fails.
+
+---
+
+## 2. Unit tests: testing private code
+
+Rust and TS differ a lot here.
+
+- **TypeScript:** Tests often live in `__tests__` or next to the file as `foo.test.ts`. You usually only test **exported** APIs (unless you use things like rewire).
+- **Rust:** **Unit tests live inside the same source file.** Rust allows testing **private** functions.
+
+### 2.1 Convention: `mod tests`
+
+To keep tests separate from production code, it’s standard to put them in a submodule named `tests` at the bottom of the file.
+
+```rust
+// src/lib.rs
+
+fn internal_adder(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+pub fn add_two(a: i32) -> i32 {
+    internal_adder(a, 2)
+}
+
+#[cfg(test)]  // Only compile this module when running `cargo test`
+mod tests {
+    use super::*;  // Bring parent (lib.rs) items into scope, including private internal_adder
+
+    #[test]
+    fn internal() {
+        assert_eq!(internal_adder(2, 2), 4);  // ✅ Can test private function
+    }
+}
+
+```
+
+**What `#[cfg(test)]` does:** When you run `cargo build` (release or dev), the `tests` module is **not** compiled; it doesn’t go into the binary. Only `cargo test` compiles and runs it. So tests don’t bloat production builds.
+
+---
+
+## 3. Integration tests: external user view
+
+To test your crate like a real user (only through **public** API), you use **integration tests**.
+
+### 3.1 Where they live
+
+By convention, integration tests go in a **`tests/`** directory at the **project root** (next to `src/`).
+
+```
+my-project/
+├── Cargo.toml
+├── src/
+│   └── lib.rs       (unit tests can live here)
+└── tests/           (integration tests)
+    ├── integration_test.rs
+    └── common/
+        └── mod.rs
+```
+
+### 3.2 How they work
+
+Each **`.rs`** file under `tests/` is compiled as a **separate crate** that depends on your library. So:
+
+1. They must **import** your crate: `use my_project;`.
+2. They can only use **public** (`pub`) items.
+
+**TS analogy:**
+
+- Unit tests in `src/*.rs` ≈ `src/*.test.ts`.
+- Integration tests in `tests/*.rs` ≈ `e2e/` or a separate package that depends on your lib.
+
+---
+
+## 4. Controlling test runs
+
+`cargo test` supports filtering and options similar to Jest.
+
+### 4.1 Filtering
+
+- **Run all tests:** `cargo test`
+- **By name:** `cargo test add` (runs tests whose name contains "add")
+- **One integration file:** `cargo test --test integration_test` (runs only `tests/integration_test.rs`)
+
+### 4.2 Ignoring tests (`#[ignore]`)
+
+For slow or special tests (e.g. that need a database), you can skip them by default:
+
+```rust
+#[test]
+#[ignore]
+fn expensive_test() {
+    // ...
+}
+```
+
+Run ignored tests explicitly: `cargo test -- --ignored`.
+
+### 4.3 Capturing output
+
+By default, **passed** tests hide `println!` output so the log stays clean. To see it: `cargo test -- --show-output`.
+
+---
+
+## 5. Advanced patterns
+
+### 5.1 Expecting panic (`#[should_panic]`)
+
+In TS you use `expect(() => call()).toThrow()`. In Rust you mark the test as "should panic":
+
+```rust
+#[test]
+#[should_panic(expected = "Divide by zero")]  // Optional: panic message must contain this string
+fn test_divide_by_zero() {
+    divide(1, 0);
+}
+```
+
+### 5.2 Tests that return `Result`
+
+Besides panicking, a test can return `Result<(), E>`. That lets you use `?` inside the test:
+
+```rust
+#[test]
+fn it_works() -> Result<(), String> {
+    if 2 + 2 == 4 {
+        Ok(())
+    } else {
+        Err(String::from("two plus two does not equal four"))
+    }
+}
+```
+
+Useful when the test does I/O or parsing; `?` keeps the test readable instead of many `unwrap()` calls.
+
+---
+
+## 6. Setup / teardown (no built-in hooks)
+
+TS developers are used to `beforeAll`, `afterEach`. **Rust has no built-in test hooks.**
+
+**Why?** Rust relies on **RAII** and the **Drop** trait. For teardown (e.g. close a DB connection, delete temp files), define a struct and implement `Drop` with the cleanup logic. When the test function returns, the struct goes out of scope and `drop` runs automatically.
+
+For setup, use a normal helper function:
+
+```rust
+// tests/common/mod.rs
+pub fn setup() -> Connection {
+    Connection::new()
+}
+
+// tests/my_test.rs
+#[test]
+fn test_db() {
+    let conn = common::setup();
+    // ...
+}  // conn goes out of scope; connection closed (if Connection implements Drop)
+```
+
+---
+
+## 7. Summary: testing for TS developers
+
+| Aspect | TypeScript (Jest/Vitest) | Rust (Cargo test) | Difference |
+| ---------------- | ------------------------------ | ---------------------------------- | ----------------------------------- |
+| **Runner** | `npm test` (via package.json) | `cargo test` (built-in) | No config in Rust |
+| **Assertions** | `expect(x).toBe(y)` | `assert_eq!(x, y)` | Macros; failure = panic |
+| **Unit test location** | `foo.test.ts` next to file | `mod tests` inside `src/foo.rs` | Rust can test private items; test code omitted from release build |
+| **Integration tests** | `tests/` or `e2e/` | Root `tests/` | Treated as separate crate; only `pub` API |
+| **Mocking** | `jest.fn()`, dynamic replacement | Harder; use traits or crates like `mockall` | Static typing makes dynamic replacement difficult |
+| **Expect panic** | `.toThrow()` | `#[should_panic]` | Attribute-based |
+| **Skip test** | `.skip` | `#[ignore]` | Attribute-based |
+
+**Takeaway:** Rust’s testing is **explicit and structured**. It doesn’t have JS’s level of dynamic flexibility (e.g. mocking arbitrary imports), so you design for testability up front (e.g. dependencies behind traits so you can inject mocks). That adds some upfront cost but tends to produce clearer, more testable structure.

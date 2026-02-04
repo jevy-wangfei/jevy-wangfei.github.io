@@ -1,0 +1,268 @@
+As a TS developer you’re used to `try/catch`. It works well on V8, but it has a big downside: **errors are invisible**. You can’t tell from a signature like `fn readFile(path: string): string` that the function might throw. You have to read docs or source.
+
+Rust treats that as bad design. Rust follows **"errors as values"**: no exceptions, only return values.
+
+---
+
+# Error handling in Rust
+
+## 0. Core shift: from throw to return
+
+- **TypeScript (implicit control flow):**
+
+```typescript
+// Signature doesn’t say it can throw
+function divide(a: number, b: number): number {
+  if (b === 0) throw new Error("Division by zero");
+  return a / b;
+}
+
+try {
+  const result = divide(10, 0);
+} catch (e) {
+  // e is unknown or any; type is lost
+}
+```
+
+- **Rust (explicit in the type):**
+
+```rust
+// Signature says: I may fail
+fn divide(a: i32, b: i32) -> Result<i32, String> {
+    if b == 0 {
+        return Err(String::from("Division by zero"));
+    }
+    Ok(a / b)
+} // No try/catch; plain if/else
+```
+
+---
+
+## 1. Two kinds of errors: panic vs Result
+
+Rust splits errors into **unrecoverable** and **recoverable**.
+
+### 1.1 Panic (unrecoverable) — like `process.exit(1)`
+
+For bugs (e.g. index out of bounds, divide by zero, memory corruption), Rust **panics**: it prints a backtrace and exits (or in WASM can throw a JS exception).
+
+```rust
+fn main() {
+    let v = vec![1, 2, 3];
+    v[99]; // ❌ Panic: index out of bounds
+}
+
+```
+
+**For TS devs:** Don’t overuse `panic!`. In Rust, panic means "programmer bug" or "environment is broken." For expected cases like "file not found" or "network error," **don’t** panic; use `Result`.
+
+### 1.2 Result (recoverable) — the main tool
+
+Most error handling goes through the `Result` enum.
+
+```rust
+enum Result<T, E> {
+    Ok(T),  // Success, value T
+    Err(E), // Failure, error E
+}
+
+```
+
+Similar to TS: `type Result<T, E> = { success: true, value: T } | { success: false, error: E }`, but Rust gives you rich combinator methods.
+
+---
+
+## 2. Handling Result: unwrapping and propagating
+
+When you get a `Result`, you must handle it or the compiler will warn.
+
+### 2.1 Pattern matching
+
+Basic style, like checking a discriminated union in TS.
+
+```rust
+let f = File::open("hello.txt"); // Result<File, std::io::Error>
+
+let f = match f {
+    Ok(file) => file,
+    Err(error) => {
+        panic!("Problem opening the file: {:?}", error);
+    },
+};
+
+```
+
+### 2.2 Unwrap and expect
+
+When you’re sure it won’t fail (or you want to crash if it does, e.g. in prototypes):
+
+- `unwrap()`: Ok → value, Err → panic.
+- `expect("msg")`: Same, but with a custom panic message (prefer this over raw `unwrap()`).
+
+```rust
+let f = File::open("hello.txt").unwrap(); // Panics if file missing
+let f = File::open("hello.txt").expect("Failed to open hello.txt");
+```
+
+---
+
+## 3. Propagating errors: the `?` operator
+
+In TS you "bubble" errors by not catching them. In Rust you propagate by returning `Err`. To avoid match-heavy code, Rust has `?`.
+
+**Task:** Open a file, read it into a String, return that String.
+
+**Verbose (match):**
+
+```rust
+fn read_username_from_file() -> Result<String, io::Error> {
+    let f = File::open("hello.txt");
+    let mut f = match f {
+        Ok(file) => file,
+        Err(e) => return Err(e),
+    };
+
+    let mut s = String::new();
+    match f.read_to_string(&mut s) {
+        Ok(_) => Ok(s),
+        Err(e) => Err(e),
+    }
+}
+```
+
+**With `?`:**
+
+```rust
+fn read_username_from_file() -> Result<String, io::Error> {
+    let mut f = File::open("hello.txt")?;  // If Err, return Err(e) from this function
+    let mut s = String::new();
+    f.read_to_string(&mut s)?;
+    Ok(s)
+}
+```
+
+`?` does three things: if Ok, unwrap the value; if Err, return that error from the current function; and it uses the `From` trait to convert error types when needed.
+
+**Chained style:**
+
+```rust
+fn read_username_from_file() -> Result<String, io::Error> {
+    let mut s = String::new();
+    File::open("hello.txt")?.read_to_string(&mut s)?;
+    Ok(s)
+}
+```
+
+**TS analogy:** `?` is like a **synchronous `await`**: you get the value on Ok, and on Err you "throw" (return) from the function.
+
+---
+
+## 4. Combinators: map, map_err, and_then, unwrap_or
+
+If you like `Array.prototype.map`, you’ll like Result’s combinators.
+
+### 4.1 map and map_err
+
+- `map`: If Ok, transform the value; if Err, pass it through.
+- `map_err`: If Err, transform the error (e.g. wrap in your own type); if Ok, pass through.
+
+```rust
+let res: Result<String, _> = Ok("10".to_string());
+let num: Result<i32, _> = res.map(|s| s.parse::<i32>().unwrap());
+```
+
+### 4.2 and_then (flatMap)
+
+When each step can fail, chain with `and_then`:
+
+```rust
+fn cook_dinner() -> Result<String, String> {
+    get_ingredients()
+        .and_then(|i| chop(i))
+        .and_then(|c| cook(c))
+        .and_then(|f| eat(f))
+}
+```
+
+Replaces nested `if err != nil` with a linear pipeline.
+
+### 4.3 unwrap_or and unwrap_or_else
+
+Provide a default, like TS `||` or `??`:
+
+```rust
+let config = File::open("config.json")
+    .map(|f| parse(f))
+    .unwrap_or(default_config()); // On any error, use default
+```
+
+---
+
+## 5. Multiple error types: one E in Result<T, E>
+
+In TS, `catch (e)` with `any` can hold any error. In Rust, `Result<T, E>` has a single error type `E`. If your function can fail with both `IoError` and `ParseIntError`, you need a strategy.
+
+### 5.1 Quick approach: trait objects (dynamic)
+
+Like a generic "Error" interface in TS; box any error that implements `Error`:
+
+```rust
+fn run() -> Result<(), Box<dyn std::error::Error>> {
+    let f = File::open("config.txt")?; // IoError
+    let num: i32 = "NaN".parse()?;     // ParseIntError
+    Ok(())
+}
+```
+
+Pros: easy to write. Cons: caller doesn’t get a concrete type; you mostly log or display.
+
+### 5.2 Structured approach: custom enum (static)
+
+Define an enum of all possible errors and implement `From` for each (or use a crate like `thiserror` to generate it):
+
+```rust
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+enum MyError {
+    #[error("File system error")]
+    Io(#[from] std::io::Error),
+
+    #[error("Parsing error")]
+    Parse(#[from] std::num::ParseIntError),
+}
+
+fn run() -> Result<(), MyError> {
+    let f = File::open("config.txt")?; // ? converts IoError -> MyError::Io
+    Ok(())
+}
+```
+
+### 5.3 Application-level: anyhow
+
+For applications (not libraries) where you mainly propagate and log errors, **anyhow** is popular. It’s a flexible error container with good backtrace support.
+
+```rust
+use anyhow::Result;
+
+fn main() -> Result<()> {
+    let config = read_config()?;
+    Ok(())
+}
+```
+
+---
+
+## 6. Summary: error handling for TS developers
+
+| Scenario | TypeScript | Rust | Note |
+| ---------------- | --------------------- | -------------------------- | -------------------- |
+| **Bug / unrecoverable** | `throw new Error()` | `panic!()` | Index out of bounds, logic dead end |
+| **Recoverable** | `try/catch` | `Result<T, E>` | Network error, missing file |
+| **Absence** | `null` / `undefined` | `Option<T>` | No record found |
+| **Propagate** | Don’t catch; let it bubble | `?` operator | Must handle or propagate |
+| **Unwrap / assert** | `!` (non-null assert) | `.unwrap()` / `.expect()` | Can panic if wrong |
+| **Default value** | `val \|\| default` | `.unwrap_or(default)` | |
+| **Multiple error types** | `catch (e: any)` | `enum MyError` or `anyhow` | Strong typing |
+
+**Takeaway:** Rust’s error handling can feel verbose at first (Result everywhere), but it forces you to decide at each call site: "If this fails, what should happen?" That removes a large class of "unhandled promise rejection" and "undefined is not a function" bugs at compile time.

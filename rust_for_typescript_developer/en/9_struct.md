@@ -1,0 +1,294 @@
+This is a **Rust structs** guide for experienced TypeScript developers.
+
+In TypeScript we work with Object, Interface, and Class every day. You might think a Rust struct is just an Object with another name—that would be **wrong**.
+
+Reading this chapter and the next two, set aside your mental model of Struct and Trait and learn how they differ from TS.
+
+In V8, an object is a big hash map (or lookup table via Hidden Classes), full of dynamism and metadata. In Rust, a struct is **precise memory layout**. If a TS Interface is a "contract," a Rust Struct is a "blueprint."
+
+---
+
+# The blueprint of data: Rust structs
+
+## 1. Definition: nominal vs structural typing
+
+This is often the first culture shock for TS developers.
+
+### TypeScript (structural / duck typing)
+
+In TS, if two interfaces have the same shape, they’re compatible.
+
+```typescript
+interface User {
+  name: string;
+  age: number;
+}
+interface Person {
+  name: string;
+  age: number;
+}
+
+let u: User = { name: "Alice", age: 30 };
+let p: Person = u; // OK: same shape
+```
+
+### Rust (nominal typing)
+
+In Rust, even with identical fields, different names mean different types.
+
+```rust
+struct User {
+    name: String,
+    age: u8,
+}
+
+struct Person {
+    name: String,
+    age: u8,
+}
+
+let u = User { name: String::from("Alice"), age: 30 };
+// let p: Person = u; // Compile error! User is not Person
+
+```
+
+**Why:** This strictness supports **memory safety** and **clear semantics**. The Rust compiler doesn’t implicitly convert types unless you implement `From` or `Into`.
+
+> In short, `From` and `Into` are a pair of traits for **type conversion** in Rust.
+> * **`From<T>` (implementor side):** "How to turn A into B." It’s **active**.
+> * **Rule:** If you implement `From<A>` for `B`, Rust **automatically** implements `Into<B>` for `A`.
+> * **Convention:** Prefer implementing `From`; it’s clearer.
+> * **`Into<T>` (caller side):** "How to turn myself into B." It’s **passive**.
+
+---
+
+## 2. Construction and field shorthand
+
+Rust borrows modern JS/TS-style shorthand.
+
+### 2.1 Basic construction and shorthand
+
+```rust
+fn build_user(email: String, username: String) -> User {
+    User {
+        email,      // Field init shorthand, like TS
+        username,
+        active: true,
+        sign_in_count: 1,
+    }
+}
+
+```
+
+### 2.2 Struct update syntax
+
+In TS you use spread (`...`). In Rust you use `..`, and it must be last.
+
+**TypeScript:**
+
+```typescript
+const user2 = { ...user1, email: "new@example.com" };
+```
+
+**Rust:**
+
+```rust
+let user2 = User {
+    email: String::from("new@example.com"),
+    ..user1 // Must be last
+};
+
+```
+
+**Ownership:** In TS, `...` is shallow copy. In Rust, `..user1` is a **Move**. Heap fields (e.g. `String`) move into `user2`; copy types (e.g. `i32`) are copied. After this line, `user1.username` is **invalid** (moved to user2), but `user1.active` and `user1.sign_in_count` are still valid (Copy).
+
+---
+
+## 3. Memory layout: tuple structs and unit structs
+
+Rust has two special struct forms for different layout needs.
+
+### 3.1 Tuple structs — "named tuples"
+
+TS tuple `[number, number]` is just an array. A Rust tuple struct is a named type.
+
+**Use case:** Distinguish `Color(0,0,0)` from `Point(0,0,0)`. In TS that’s hard to enforce; in Rust it’s zero-cost.
+
+```rust
+struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);
+
+let black = Color(0, 0, 0);
+let origin = Point(0, 0, 0);
+// black == origin // Type mismatch; safe!
+```
+
+**Memory:** Just three consecutive `i32`s; no field-name overhead.
+
+### 3.2 Unit-like structs — "empty interface"
+
+```rust
+struct AlwaysEqual;
+
+```
+
+In TS this is like `interface AlwaysEqual {}`.
+**Use:** Zero size (0 bytes). Used for **implementing traits** (e.g. mock objects or marker types).
+
+---
+
+## 4. Methods: splitting "class"
+
+TS `class` bundles data (props) and behavior (methods). Rust keeps them physically separate.
+
+### 4.1 `impl` block
+
+```rust
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+```
+
+### 4.2 The three forms of `self`
+
+In TS, `this` is implicit. In Rust, `self` is the first parameter and determines **ownership** at the call site.
+
+| Parameter | TS equivalent | Rust meaning | Common |
+| ----------- | ----------------- | -------------------------------------------------------------------- | --------------------- |
+| `&self` | `this` (readonly) | **Borrow.** Read-only; doesn’t take ownership. | ⭐⭐⭐⭐⭐ (most cases) |
+| `&mut self` | `this` | **Mutable borrow.** Can modify the struct. | ⭐⭐⭐ |
+| `self` | N/A | **Takes ownership.** After the call, the instance is consumed (e.g. for conversion). | ⭐ |
+
+**Example:**
+
+```rust
+impl Rectangle {
+    fn area(&self) -> u32 { ... }
+
+    fn resize(&mut self, factor: u32) {
+        self.width *= factor;
+    }
+
+    fn destroy(self) {
+        println!("Rectangle is gone");
+    }
+}
+
+let mut rect = Rectangle { width: 10, height: 10 };
+rect.resize(2); // OK
+rect.destroy();  // OK
+// rect.area();  // Error: rect was consumed by destroy
+```
+
+### 4.3 Associated functions — "static methods"
+
+TS `static` methods correspond to functions in `impl` that don’t take `self`.
+
+```rust
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle { width: size, height: size }
+    }
+}
+
+let sq = Rectangle::square(10);
+
+```
+
+---
+
+## 5. Ownership and lifetime pitfalls
+
+TS developers are used to passing objects around. Storing references in structs is where Rust gets strict.
+
+**Wrong:**
+
+```rust
+struct User {
+    username: &str, // ❌ Storing a reference in a struct
+    email: &str,
+}
+
+```
+
+**Compiler:** `missing lifetime specifier`.
+
+**Why:** If a struct holds a reference (`&str`), Rust must ensure the struct **doesn’t outlive** the borrowed data. Otherwise the struct could become a dangling-pointer container. That requires lifetime annotations `'a`, which are heavy for beginners.
+
+**Recommendation for TS devs:** While learning, prefer **owned** fields (`String`, `Vec<T>`) over slices/references (`&str`, `&[T]`).
+
+```rust
+struct User {
+    username: String,
+    email: String,
+}
+
+```
+
+---
+
+## 6. Printing and Debug
+
+In JS you use `console.log(obj)`. In Rust, `println!("{}", user)` fails by default because `User` doesn’t implement `Display` (the trait for "string representation," like Java’s toString).
+
+**Solution: derive macro**
+
+```rust
+#[derive(Debug)]
+struct User {
+    name: String,
+}
+
+let u = User { name: String::from("Rust") };
+
+println!("{:?}", u);   // Debug format
+println!("{:#?}", u);  // Pretty-printed
+```
+
+> Note: `!` in `println!` means it’s a macro. `{:?}` is debug output. The `?` in error handling is the try operator.
+
+---
+
+## 7. Memory alignment (advanced)
+
+In TS, field order doesn’t affect object size (V8 handles it). In Rust, struct field order **can affect size** because of **padding**.
+
+```rust
+// Before layout tweak
+struct Bad {
+    a: u8,   // 1 byte
+    b: u64,  // 8 bytes (+ 7 bytes padding before)
+    c: u8,   // 1 byte (+ 7 bytes padding after)
+} // Total might be 24 bytes
+
+// After
+struct Good {
+    b: u64, // 8
+    a: u8,  // 1
+    c: u8,  // 1 (next to a)
+    // 6 bytes padding
+} // Total 16 bytes
+```
+
+The compiler can reorder for layout (repacking). For FFI (calling C), you may need explicit layout (`#[repr(C)]`). As an advanced developer, it helps to remember that fields have physical size.
+
+---
+
+## Summary
+
+For TS full-stack developers:
+
+1. **It’s not an object:** No Hidden Class, no adding fields at runtime. It’s a compile-time memory layout.
+2. **Move semantics everywhere:** With `..update` syntax, watch which fields move.
+3. **Data vs behavior:** `struct` holds data; `impl` holds logic.
+4. **Controlling `self`:** Distinguish `&self` (read), `&mut self` (write), `self` (consume).
+
+Once you’re comfortable with structs, you have the foundation for data modeling in Rust, usually combined with **Enum** and **Trait** for a type-safe, expressive system.
