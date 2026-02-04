@@ -120,9 +120,9 @@ comments:
   # Giscus options › https://giscus.app
   giscus:
     repo: jevy-wangfei/jevy-wangfei.github.io # <gh-username>/<repo>
-    repo_id: # FILL_ME (get from giscus.app)
+    repo_id: R_kgDORIH_1w # FILL_ME (get from giscus.app)
     category: General
-    category_id: # FILL_ME (get from giscus.app)
+    category_id: DIC_kwDORIH_184C13mc # FILL_ME (get from giscus.app)
     mapping: # optional, default to 'pathname'
     strict: # optional, default to '0'
     input_position: # optional, default to 'bottom'
