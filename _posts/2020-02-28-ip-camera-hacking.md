@@ -1,30 +1,57 @@
 ---
 
-title: IP Camera Hacking
+title: Waking Up Solar IP Cameras with Python
 
 category: Gist
-tags: [Geek]
+tags: [Geek, Python, IoT, Network]
 date: 2020-02-28
 ---
 
-Got a Solar WiFi IP camera from <a href="https://www.ebay.com.au/itm/302918525683?ul_noapp=true">Wireless Solar IP67 Security Camera System Outdoor Home Cam 1080P 2MP</a>
+I recently acquired the same solar-powered WiFi IP camera mentioned in my [previous post](2019-02-28-read-h264-livestream.md): [Wireless Solar IP67 Security Camera System](https://www.ebay.com.au/itm/302918525683?ul_noapp=true).
 
-I wanted to control this camera using a script or program. 
+My goal was to programmatically control the camera, specifically to wake it up from its low-power state.
 
-To activate/wakeup, the camera has to be set correctly:
-1.	The camera is connected to the Internet, and its status should be shown as ‘online’ on Microshare, Danale mobile client. 
+### Prerequisites
 
+To successfully wake up the camera, it must be properly configured:
 
-Activate the camera using a Python script:
+1.  The camera must be connected to the internet.
+2.  Its status should be shown as 'online' in the mobile app (e.g., Microshare or Danale).
+
+### Waking Up the Camera
+
+The camera can be activated by sending a specific sequence of UDP packets. Here is a Python script to demonstrate this:
+
 ```python
-import socket, sys
+import socket
 import binascii
-dest = ('camera ip address', 'any port')
-# sending these hex codes in UDP protocol to activate the camera
-packet = binascii.unhexlify("0000000a983b16f8f39c")
-s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-s.sendto(bytes(packet), dest)
+
+# Configuration
+DEST_IP = 'camera_ip_address'
+DEST_PORT = 12345  # Replace with the actual port if known, or use a broadcast approach if supported
+MAGIC_PACKET = "0000000a983b16f8f39c"
+
+def wake_camera(ip, port):
+    """
+    Sends a UDP packet to wake up the IP camera.
+    """
+    try:
+        # Create a UDP socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        
+        # Prepare the packet
+        message = binascii.unhexlify(MAGIC_PACKET)
+        
+        # Send to the destination
+        sock.sendto(message, (ip, port))
+        print(f"Wake-up packet sent to {ip}:{port}")
+        
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        sock.close()
+
+if __name__ == "__main__":
+    wake_camera(DEST_IP, DEST_PORT)
 ```
-
-

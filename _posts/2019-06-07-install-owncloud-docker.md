@@ -1,32 +1,33 @@
 ---
-published: true
-title: Install OwnCloud with Docker
 
-author: Jevy 
+title: Deploying OwnCloud with Docker
+
 category: Gist
-tags: [Geek]
+tags: [Docker, OwnCloud, DevOps, Ubuntu]
 date: 2019-06-07
 ---
 
-I struggled to install OwnCloud directly on Ubuntu 18. I spent hours installing and configuring its dependencies but failed at the database script execution step.
+Installing OwnCloud directly on Ubuntu 18 can be challenging due to dependency conflicts and database configuration issues. After struggling with a manual installation, I discovered that the Dockerized version of OwnCloud is much easier to set up and maintain.
 
-While searching for a solution, I found the Dockerized OwnCloud and discovered it is pretty easy to set up. 
+Here is my installation and configuration log.
 
-Here is the installation/configuration log:
+### Prerequisites
 
-**Install docker and docker-compose**
-- [docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
-- [docker-compose](https://docs.docker.com/compose/install/)
+- [Install Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+- [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-**Prepare a docker-compose.yml** :
+### Docker Compose Configuration
 
-I referenced the [official Docker installation guide](https://doc.owncloud.com/server/admin_manual/installation/docker/)
-and this [example docker-compose.yml](https://raw.githubusercontent.com/owncloud-docker/server/master/docker-compose.yml) to create my own `docker-compose.yml`.
+I referenced the [official OwnCloud Docker installation guide](https://doc.owncloud.com/server/admin_manual/installation/docker/) and the [official example](https://raw.githubusercontent.com/owncloud-docker/server/master/docker-compose.yml) to create a customized `docker-compose.yml`.
 
-Because I have an RDS instance on the cloud and NAS storage mounted on this server, I wanted to reuse them. So I removed the volumes and db dependencies from the yml file.
-Because this OwnCloud file sharing will be used by very few users, and the VM has extra charges for CPU usage, I removed redis. 
+**Customizations:**
+- **External Database**: I removed the database container dependencies because I wanted to connect to an existing AWS RDS instance.
+- **External Storage**: I configured volumes to mount my existing NAS storage.
+- **Redis Removed**: Since this instance serves very few users and I wanted to minimize CPU usage on the VM, I removed the Redis service.
 
-```yml
+Here is the `docker-compose.yml` file:
+
+```yaml
 version: '2.1'
 
 services:
@@ -56,15 +57,24 @@ services:
       - /mnt/data/owncloud:/mnt/data
       - /other-directory1:/mnt/data/d1
       - /other-directory2:/mnt/data/d2
-
 ```
-Use command `sudo docker-compose up -d` to start owncloud, and access it through `server_ip:8080`. 
-Please add port `8080` to your VM's network route rule. 
 
-**Add local storage** :
+### Running OwnCloud
 
-Reference this [Local storage](https://doc.owncloud.com/server/admin_manual/configuration/files/external_storage/local.html) to add local directory. 
+1.  Start the service:
+    ```bash
+    sudo docker-compose up -d
+    ```
+2.  Access OwnCloud at `http://server_ip:8080`.
+3.  **Note**: Ensure port `8080` is open in your VM's firewall/security group settings.
 
+### Adding Local Storage
 
-**Useful notes**
-- scan files copied to owncloud directory: `docker-compose exec owncloud occ files:scan --all`
+To add local directories as external storage, verify that `OWNCLOUD_ALLOW_EXTERNAL_LOCAL_STORAGE=true` is set, and refer to the [Local Storage Configuration](https://doc.owncloud.com/server/admin_manual/configuration/files/external_storage/local.html) documentation.
+
+### Useful Commands
+
+- Scan files manually copied to the data directory:
+    ```bash
+    docker-compose exec owncloud occ files:scan --all
+    ```
