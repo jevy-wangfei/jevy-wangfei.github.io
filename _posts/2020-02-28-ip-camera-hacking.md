@@ -7,7 +7,7 @@ tags: [Geek, Python, IoT, Network]
 date: 2020-02-28
 ---
 
-I recently acquired the same solar-powered WiFi IP camera mentioned in my [previous post](2019-02-28-read-h264-livestream.md): [Wireless Solar IP67 Security Camera System](https://www.ebay.com.au/itm/302918525683?ul_noapp=true).
+I recently acquired the same solar-powered WiFi IP camera mentioned in my Capturing H.264 Livestreams from IP Cameras: [Wireless Solar IP67 Security Camera System](https://www.ebay.com.au/itm/302918525683?ul_noapp=true).
 
 My goal was to programmatically control the camera, specifically to wake it up from its low-power state.
 
