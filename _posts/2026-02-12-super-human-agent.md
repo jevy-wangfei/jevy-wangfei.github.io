@@ -5,7 +5,6 @@ categories: [Thinking]
 tags: [AI, software engineering, career, architecture, agents]
 ---
 
-*
 
 We are living through the most existential shift in the history of software engineering.
 
