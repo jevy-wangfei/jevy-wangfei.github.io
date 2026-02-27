@@ -1,6 +1,6 @@
 ---
 title: "An AI Contract Auditor in Microsoft Word (developing)"
-date: 2026-02-26 12:00:00 +1100
+date: 2026-03-26 12:00:00 +1100
 categories: [Application]
 tags: [AI, Legal Tech, Word Add-in, Enterprise Software, Claude]
 ---
