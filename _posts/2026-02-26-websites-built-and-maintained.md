@@ -1,11 +1,11 @@
 ---
-title: "Websites I Build and Maintain"
+title: "Quick Website list reference - Build and Maintain"
 date: 2026-02-26 14:00:00 +1100
 categories: [Application]
 tags: [Web Development, Hosting, cPanel, Client Projects]
 ---
 
-A running list of websites I develop and maintain (hosting, content, and technical support).
+A running list of websites I develop and maintain (hosting, content, and technical support) for quick reference.
 
 ### Full list
 
