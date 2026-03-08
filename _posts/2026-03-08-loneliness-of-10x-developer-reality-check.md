@@ -1,6 +1,6 @@
 ---
 title: "The Loneliness of the \"10x Developer\": A Reality Check from My Son"
-date: 2026-03-08 12:00:00 +1100
+date: 2026-03-08 01:00:00 +1100
 categories: [Thinking]
 tags: [AI Programming, Software Engineering, Mental Health, Future of Work, Human Connection, FlowSight]
 ---
